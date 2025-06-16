@@ -176,6 +176,10 @@
     <ClInclude Include="include\BaseApp.h" />
     <ClInclude Include="include\CShape.h" />
     <ClInclude Include="include\Prerequisites.h" />
+    <ClInclude Include="include\TSharedPointer.h" />
+    <ClInclude Include="include\TStaticPtr.h" />
+    <ClInclude Include="include\TUniquePtr.h" />
+    <ClInclude Include="include\TWeakPointer.h" />
     <ClInclude Include="include\Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

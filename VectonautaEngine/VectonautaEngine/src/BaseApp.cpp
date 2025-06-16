@@ -25,12 +25,13 @@ BaseApp::run() {
 
 bool 
 BaseApp::init() {
-    m_window = new Window(1920, 1080, "Vectonauta Engine");
-    m_circle = new sf::CircleShape(100.0f);
-    m_circle->setFillColor(sf::Color::Blue);
-    m_circle->setPosition(200.f, 150.f);
-	return true;
-}
+    m_windowPtr = EngineUtilities::MakeShared<Window>(1928, 1080, "VectonautaEngine");
+    if (!m_windowPtr) {
+        ERROR("BaseApp",
+            "init",
+            "Failed to create window pointer, check memory allocation");
+        return false;
+    }
 
 void 
 BaseApp::uptade() {

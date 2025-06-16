@@ -12,6 +12,10 @@
 
 //THIRD PARTIES
 #include <SFML/Graphics.hpp>
+#include "Memory/TSharedPointer.h"
+#include "Memory/TWeakPointer.h"
+#include "Memory/TStaticPtr.h"
+#include "Memory/TUniquePtr.h"
 
 //INGUI
 

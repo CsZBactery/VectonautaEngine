@@ -1,36 +1,36 @@
 #include "Window.h"
 
-Window::Window(int width, int  height, const std::string& title) {
-//Iniciar la ventana
-m_window = new sf::RenderWindow(sf::VideoMode(width, height), title);
+Window::Window(int width, int height, const std::string& title) {
+    //Inicializar la ventana
+    m_windowPtr = std::make_unique<sf::RenderWindow>(sf::VideoMode(width, height), title);
+    //m_window = new sf::RenderWindow(sf::VideoMode(witdh, height), title;
 
-if (m_window) {
-    m_window->setFramerateLimit(60); // Limitar a 60 fps.
-    MESSAGE("Window", "window", "window created successfully");
-}
-else {
-    ERROR("Window", "widnow", "Failed to create window");
-  }
-}
-
-Window::~Window(); {
-    SAFE_PTR_RELEASE(m_window);
-}
-
-void
-Window::handleEvents() {
-    sf::Event event;
-    while (m_window->pollEvent(event)) {
-        if (event.type == sf::Event::Closed)
-            m_window->close();
+    if (!m_windowPtr.isNull()) {
+        m_windowPtr->setFramerateLimit(60); //Limitar 60 FPS
+        MESSAGE("Window", "window", "Window created successfully");
+    }
+    else {
+        ERROR("Window", "window", "Failed to create window");
     }
 }
 
-bool 
-Window::isOpen() const {
+Window::~Window() {
+    m_windowPtr.reset();
+    //SAFE_PTR_RELEASE(m_window);
+}
 
-    if (m_window) {
-        return m_window->isOpen();
+void Window::handleEvents() {
+    sf::Event event;
+    while (m_windowPtr->pollEvent(event)) {
+        //Cerrrar la ventana si el usuario lo indica
+        if (event.type == sf::Event::Closed)
+            m_windowPtr->close();
+    }
+}
+
+bool Window::isOpen() const {
+    if (m_windowPtr) {
+        return m_windowPtr->isOpen();
     }
     else {
         ERROR("Window", "isOpen", "Window is null");
@@ -38,37 +38,33 @@ Window::isOpen() const {
     }
 }
 
-
-void 
-Window::clear(const sf::Color& color) {
-    if (m_window) {
-        m_window->clear(color);
+void Window::clear(const sf::Color& color) {
+    if (m_windowPtr) {
+        m_windowPtr->clear(color);
     }
     else {
         ERROR("Window", "clear", "Window is null");
     }
 }
 
-void 
-Window::draw(const sf::Drawable& drawable, const sf::RenderStates& states) {
-    if (m_window) {
-        m_window->draw(drawable, states);
+void Window::draw(const sf::Drawable& drawable, const sf::RenderStates& states) {
+    if (m_windowPtr) {
+        m_windowPtr->draw(drawable, states);
     }
     else {
         ERROR("Window", "draw", "Window is null");
     }
 }
 
-void 
-Window::display() {
-    if (m_window) {
-        m_window->display();
+void Window::display() {
+    if (m_windowPtr) {
+        m_windowPtr->display();
     }
     else {
         ERROR("Window", "display", "Window is null");
     }
+}
 
-void
-Window::destroy() {
-SAFE_PTR_RELEASE(m_window);
-    }
+void Window::destroy() {
+    m_windowPtr.reset();
+}
