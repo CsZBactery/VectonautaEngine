@@ -16,11 +16,11 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{14cef604-fbb0-4386-9e8b-efdcaa19527e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory\ECS">
+      <UniqueIdentifier>{25b51d2d-a54b-48b4-9293-82b32505b8a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\main.cpp">
-      <Filter>Archivos de recursos</Filter>
-    </ClCompile>
     <ClCompile Include="src\BaseApp.cpp">
       <Filter>Archivos de recursos</Filter>
     </ClCompile>
@@ -28,6 +28,9 @@
       <Filter>Archivos de recursos</Filter>
     </ClCompile>
     <ClCompile Include="src\CShape.cpp">
+      <Filter>Archivos de recursos</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
       <Filter>Archivos de recursos</Filter>
     </ClCompile>
   </ItemGroup>
@@ -55,6 +58,15 @@
     </ClInclude>
     <ClInclude Include="include\TWeakPointer.h">
       <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>Memory\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Memory\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>Memory\ECS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
