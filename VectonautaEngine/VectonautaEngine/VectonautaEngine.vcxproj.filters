@@ -19,6 +19,12 @@
     <Filter Include="Memory\ECS">
       <UniqueIdentifier>{25b51d2d-a54b-48b4-9293-82b32505b8a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Includes">
+      <UniqueIdentifier>{84f54f05-72b6-49af-ab89-859adea9fade}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Includes\Utilities">
+      <UniqueIdentifier>{f6a46b3d-c5e3-439e-a280-3439cc3cf424}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BaseApp.cpp">
