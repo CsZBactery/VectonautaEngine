@@ -8,7 +8,7 @@
 #include "Prerequisites.h"
 #include "Memory/TSharedPointer.h"
 #include "Memory/TUniquePtr.h"
-#include "ECS/Component.h"
+#include "ECS/Component.h
 
 class Window;
 
