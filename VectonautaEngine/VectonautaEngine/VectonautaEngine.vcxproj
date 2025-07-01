@@ -174,18 +174,19 @@
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Component.h" />
-    <ClInclude Include="Entity.h" />
+    <ClInclude Include="CVector2.h" />
     <ClInclude Include="include\BaseApp.h" />
     <ClInclude Include="include\CShape.h" />
     <ClInclude Include="include\ECS\Actor.h" />
+    <ClInclude Include="include\ECS\Component.h" />
+    <ClInclude Include="include\ECS\Entity.h" />
+    <ClInclude Include="include\ECS\Transform.h" />
+    <ClInclude Include="include\Memory\TSharedPointer.h" />
+    <ClInclude Include="include\Memory\TStaticPtr.h" />
+    <ClInclude Include="include\Memory\TUniquePtr.h" />
+    <ClInclude Include="include\Memory\TWeakPointer.h" />
     <ClInclude Include="include\Prerequisites.h" />
-    <ClInclude Include="include\TSharedPointer.h" />
-    <ClInclude Include="include\TStaticPtr.h" />
-    <ClInclude Include="include\TUniquePtr.h" />
-    <ClInclude Include="include\TWeakPointer.h" />
     <ClInclude Include="include\Window.h" />
-    <ClInclude Include="Transform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
