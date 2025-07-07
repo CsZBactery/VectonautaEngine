@@ -9,7 +9,6 @@
  */
 
 #include <SFML/System/Vector2.hpp>
-#include "ECS/Component.h"
 
 class Window;
 
