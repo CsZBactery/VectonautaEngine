@@ -1,12 +1,11 @@
 #pragma once
-#include "..//Prerequisites.h"
+#include "../Prerequisites.h"
 #include "Component.h"
 
-class
-  Window;
+class window;
 
 class
-  Entity {
+Entity {
 public:
 
 
@@ -44,12 +43,12 @@ public:
   template<typename T>
   void addComponent(EngineUtilities::TSharedPointer<T> component) {
     static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
-    component.push_back(component.template dynamic_pointer_cast<Component>());
+    components.push_back(component.template dynamic_pointer_cast<Component>());
   }
 
   template<typename T>
   EngineUtilities::TSharedPointer<T>
-    getComponents() {
+    getComponent() {
     for (auto& component : components) {
       EngineUtilities::TSharedPointer<T> specificComponent = component.template dynamic_pointer_cast<T>();
       if (specificComponent) {
@@ -62,5 +61,5 @@ public:
 protected:
   bool isActive;
   uint32_t id;
-  std::vector < EngineUtilities::TSharedPointer<Component>> components;
+  std::vector<EngineUtilities::TSharedPointer<Component>> components;
 };

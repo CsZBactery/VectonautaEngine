@@ -1,15 +1,10 @@
 #pragma once
-
+#include "Prerequisites.h"
+#include "ECS\Component.h"
 /**
  * @file CShape.h
  * @brief Declares the CShape class used to represent 2D shapes as components in the ECS system.
  */
-
-#include "Prerequisites.h"
-#include "Memory/TSharedPointer.h"
-#include "Memory/TUniquePtr.h"
-#include "ECS/Component.h
-
 class Window;
 
 /**
@@ -29,13 +24,18 @@ public:
    * @brief Constructs a CShape component with a specific shape type.
    * @param shapeType Type of the shape to initialize.
    */
-  CShape(ShapeType shapeType);
+  CShape(ShapeType shapeType):  m_shapePtr(nullptr),
+    m_shapeType(ShapeType::EMPTY),
+    Component(ComponentType::SHAPE) {}
 
   /**
    * @brief Destructor.
    */
   virtual
     ~CShape() = default;
+
+  void
+    createShape(ShapeType shapeType);
 
   /**
    * @brief Initializes the component.
@@ -62,13 +62,6 @@ public:
    */
   void
     destroy() override;
-
-  /**
-   * @brief Creates a new shape based on the specified type.
-   * @param shapeType Type of shape to create.
-   */
-  void
-    createShape(ShapeType shapeType);
 
   /**
    * @brief Sets the shape position using coordinates.
@@ -105,12 +98,6 @@ public:
    */
   void
     setScale(const sf::Vector2f& scl);
-
-  /**
-   * @brief Returns the raw shape pointer (for low-level access).
-   * @return Pointer to the internal SFML shape, or nullptr if not set.
-   */
-  sf::Shape* getShape();
 
 private:
   EngineUtilities::TSharedPointer<sf::Shape> m_shapePtr; ///< Smart pointer to the SFML shape.

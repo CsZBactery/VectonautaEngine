@@ -50,9 +50,6 @@
     <ClInclude Include="include\CShape.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="include\ECS\Transform.h">
-      <Filter>ECS</Filter>
-    </ClInclude>
     <ClInclude Include="include\ECS\Entity.h">
       <Filter>ECS</Filter>
     </ClInclude>
@@ -75,6 +72,9 @@
       <Filter>Memory</Filter>
     </ClInclude>
     <ClInclude Include="CVector2.h">
+      <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ECS\Transform.h">
       <Filter>ECS</Filter>
     </ClInclude>
   </ItemGroup>
