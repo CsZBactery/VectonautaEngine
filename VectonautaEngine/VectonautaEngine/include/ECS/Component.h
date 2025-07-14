@@ -7,7 +7,8 @@
 
 #include "../Prerequisites.h"
 
-class Window;
+class
+  Window;
 
 /**
  * @enum ComponentType
@@ -15,9 +16,9 @@ class Window;
  */
 enum
   ComponentType {
-  NONE = 0,       ///< No component
-  TRANSFORM = 1,   ///< Transform component (position, rotation, scale)
-  SPRITE = 2,     ///< Sprite component (2D image)
+  None = 0,       ///< No component
+  TRANFORM = 1,   ///< Transform component (position, rotation, scale)
+  SRPITE = 2,     ///< Sprite component (2D image)
   RENDERER = 3,   ///< Renderer component
   PHYSICS = 4,    ///< Physics simulation component
   AUDIOSOURCE = 5,///< Audio source component

@@ -1,13 +1,13 @@
 #pragma once
-#include "../Prerequisites.h"
+#include "..//Prerequisites.h"
 #include "Component.h"
 
-class window;
+class
+  Window;
 
 class
-Entity {
+  Entity {
 public:
-
 
   virtual
     ~Entity() = default;
@@ -40,26 +40,30 @@ public:
     destroy() = 0;
 
 
-  template<typename T>
-  void addComponent(EngineUtilities::TSharedPointer<T> component) {
-    static_assert(std::is_base_of<Component, T>::value, "T must be derived from Component");
-    components.push_back(component.template dynamic_pointer_cast<Component>());
+  template<typename T> void
+    addComponent(EngineUtilities::TSharedPointer<T> component) {
+    static_assert(std::is_base_of<Component, T>
+      ::value, "T must be derived from Component");
+    components.push_back
+    (component.template dynamic_pointer_cast<Component>());
   }
 
   template<typename T>
   EngineUtilities::TSharedPointer<T>
     getComponent() {
     for (auto& component : components) {
-      EngineUtilities::TSharedPointer<T> specificComponent = component.template dynamic_pointer_cast<T>();
+      EngineUtilities::TSharedPointer<T> specificComponent
+        = component.template dynamic_pointer_cast<T>();
       if (specificComponent) {
         return specificComponent;
       }
     }
+
     return EngineUtilities::TSharedPointer<T>();
   }
 
 protected:
   bool isActive;
   uint32_t id;
-  std::vector<EngineUtilities::TSharedPointer<Component>> components;
+  std::vector < EngineUtilities::TSharedPointer<Component>> components;
 };

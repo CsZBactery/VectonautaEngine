@@ -30,52 +30,55 @@ public:
   /**
    * @brief Destructor.
    */
-  virtual 
-  ~Transform() = default;
+  virtual
+    ~Transform() = default;
 
   // Métodos override
 
   //Quitar deltaTime 
-  void 
-  start() override {}
+  void
+    start() override {}
 
-  
-  void 
-  update(float deltaTime) override {}
 
- 
-  void 
-  render(const EngineUtilities::TSharedPointer<Window>& window) override {}
+  void
+    update(float deltaTime) override {}
 
-  void 
-  destroy() override {
+
+  void
+    render(const EngineUtilities::TSharedPointer<Window>& window) override {}
+
+  void
+    destroy() override {
   }
 
   // Setters
-  void 
-  setPosition(const sf::Vector2f& pos) { 
-  m_position = pos; }   //Actualiza el valor de la clase 
+  void
+    setPosition(const sf::Vector2f& pos) {
+    m_position = pos;
+  }   //Actualiza el valor de la clase 
 
-  void 
-  setRotation(const sf::Vector2f& rot) { 
-  m_rotation = rot; }
+  void
+    setRotation(const sf::Vector2f& rot) {
+    m_rotation = rot;
+  }
 
-  void 
-  setScale(const sf::Vector2f& scl) { 
-  m_scale = scl; }
+  void
+    setScale(const sf::Vector2f& scl) {
+    m_scale = scl;
+  }
 
   // Getters
-  sf::Vector2f 
-  getPosition() const { return m_position; }
+  sf::Vector2f
+    getPosition() const { return m_position; }
 
-  sf::Vector2f 
-  getRotation() const { return m_rotation; }
+  sf::Vector2f
+    getRotation() const { return m_rotation; }
 
-  sf::Vector2f 
-  getScale()    const { return m_scale; }
+  sf::Vector2f
+    getScale()    const { return m_scale; }
 
 private:
-  sf::Vector2f m_position; 
+  sf::Vector2f m_position;
   sf::Vector2f m_rotation;
-  sf::Vector2f m_scale;    
+  sf::Vector2f m_scale;
 };
