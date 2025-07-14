@@ -6,16 +6,23 @@
  * @brief Implementation of the CShape class for creating and manipulating different SFML shapes.
  */
 
- /**
-  * @brief Creates a shape of the specified type.
-  *
-  * Allocates and configures a shape (Circle, Rectangle, Triangle, or Polygon) based on the given shape type.
-  * The shape is stored internally using a shared pointer.
-  *
-  * @param shapeType The type of shape to create.
-  */
-void
-CShape::createShape(ShapeType type) {
+ // Constructor por defecto
+CShape::CShape()
+  : Component(ComponentType::SHAPE),
+  m_shapePtr(nullptr),
+  m_shapeType(ShapeType::EMPTY) {
+}
+
+// Constructor con tipo de forma
+CShape::CShape(ShapeType shapeType)
+  : Component(ComponentType::SHAPE),
+  m_shapePtr(nullptr),
+  m_shapeType(ShapeType::EMPTY) {
+  createShape(shapeType);
+}
+
+// Método que crea la figura
+void CShape::createShape(ShapeType type) {
   m_shapeType = type;
 
   switch (type) {
@@ -58,82 +65,55 @@ CShape::createShape(ShapeType type) {
   }
 }
 
-CShape::CShape(ShapeType shapeType)
-{
-}
-
 void CShape::start() {
-  // Tu lógica aquí
+  // Lógica inicial (por ahora vacía)
 }
 
-void
-CShape::update(float deltaTime) {
-  // Future logic for animation or state change
+void CShape::update(float deltaTime) {
+  // Animación o lógica futura
 }
 
-/**
- * @brief Renders the shape using the given window.
- *
- * @param window Shared pointer to the window object.
- */
-void
-CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
+void CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
   if (m_shapePtr) {
     window->draw(*m_shapePtr);
-  
   }
 }
 
-void
-CShape::destroy() {
-}
-/**
- * @brief Sets the position of the shape.
- *
- * @param x X coordinate.
- * @param y Y coordinate.
- */
-void
-CShape::setPosition(float x, float y) {
-  if (m_shapePtr) m_shapePtr->setPosition(x, y);
-  else ERROR("CShape", "setPosition", "Shape is not initialized.");
- }
-
-/**
- * @brief Sets the position of the shape using a vector.
- *
- * @param position The position as a 2D vector.
- */
-
-/**
- * @brief Sets the fill color of the shape.
- *
- * @param color The color to apply.
- */
-void
-CShape::setFillColor(const sf::Color& color) {
-  if (m_shapePtr) m_shapePtr->setFillColor(color);
-  else ERROR("CShape", "setFillColor", "Shape is not initialized.");
+void CShape::destroy() {
+  // No se requiere lógica adicional por ahora
 }
 
-/**
- * @brief Sets the rotation angle of the shape.
- *
- * @param angle The rotation angle in degrees.
- */
-void
-CShape::SetRotation(float angle) {
-  if (m_shapePtr) m_shapePtr->setRotation(angle);
-  else ERROR("CShape", "setRotation", "Shape is not initialized.");
+void CShape::setPosition(float x, float y) {
+  if (m_shapePtr)
+    m_shapePtr->setPosition(x, y);
+  else
+    ERROR("CShape", "setPosition", "Shape is not initialized.");
 }
 
-/**
- * @brief Sets the scale of the shape.
- *
- * @param scale The scaling factor as a 2D vector.
- */
-void
-CShape::setScale(const sf::Vector2f& scale) {
-  if (m_shapePtr) m_shapePtr->setScale(scale);
-  else ERROR("CShape", "setScale", "Shape is not initialized.");
+void CShape::setPosition(const sf::Vector2f& position) {
+  if (m_shapePtr)
+    m_shapePtr->setPosition(position);
+  else
+    ERROR("CShape", "setPosition", "Shape is not initialized.");
+}
+
+void CShape::setFillColor(const sf::Color& color) {
+  if (m_shapePtr)
+    m_shapePtr->setFillColor(color);
+  else
+    ERROR("CShape", "setFillColor", "Shape is not initialized.");
+}
+
+void CShape::SetRotation(float angle) {
+  if (m_shapePtr)
+    m_shapePtr->setRotation(angle);
+  else
+    ERROR("CShape", "SetRotation", "Shape is not initialized.");
+}
+
+void CShape::setScale(const sf::Vector2f& scale) {
+  if (m_shapePtr)
+    m_shapePtr->setScale(scale);
+  else
+    ERROR("CShape", "setScale", "Shape is not initialized.");
 }

@@ -23,6 +23,10 @@ public:
    */
   CShape();
 
+  /**
+   * @brief Constructs a CShape component with a specific shape type.
+   * @param shapeType Type of the shape to initialize.
+   */
   CShape(ShapeType shapeType);
 
   /**
