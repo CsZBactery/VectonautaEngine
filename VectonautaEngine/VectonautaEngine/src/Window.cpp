@@ -107,6 +107,12 @@ void Window::display() {
   }
 }
 
+void
+Window::update() {
+  //Almacena el deltaTime una sola vez
+  deltaTime= clock.restart(); 
+}
+
 /**
  * @brief Destroys the window and releases its resources safely.
  */

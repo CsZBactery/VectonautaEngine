@@ -69,7 +69,7 @@ public:
    */
   void
     draw(const sf::Drawable& drawable,
-      const sf::RenderStates& states = sf::RenderStates::Default);
+         const sf::RenderStates& states = sf::RenderStates::Default);
 
   /**
    * @brief Displays the contents of the window.
@@ -87,7 +87,13 @@ public:
   void
     destroy();
 
+  void
+    update();
+
 private:
   EngineUtilities::TUniquePtr<sf::RenderWindow> m_windowPtr; ///< Unique pointer to the SFML render window.
   sf::View m_view; ///< View used for rendering (not currently exposed).
+public:
+  sf::Time deltaTime;
+  sf::Clock clock;
 };

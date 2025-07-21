@@ -1,5 +1,6 @@
 #include "BaseApp.h"
 
+
 /**
  * @file main.cpp
  * @brief Entry point of the application.

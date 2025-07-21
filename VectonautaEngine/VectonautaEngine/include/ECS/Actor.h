@@ -1,9 +1,10 @@
 #pragma once
-#include "..//Prerequisites.h"
+#include "../Prerequisites.h"
 #include "Entity.h"
 #include "CShape.h"
 #include "Transform.h"
 
+class Window;
 /**
  * @class Actor
  * @brief Representa una entidad activa del mundo del juego que puede tener componentes, ser actualizada, renderizada y destruida.
@@ -79,10 +80,8 @@ private:
 template <typename T>
 inline EngineUtilities::TSharedPointer<T> Actor::getComponent() {
   for (auto& component : components) {
-    EngineUtilities::TSharedPointer<T> specificComponent = component.template dynamic_pointer_cast<T>();
-    if (specificComponent) {
-      return specificComponent;
-    }
+    auto specific = component.template dynamic_pointer_cast<T>();
+    if (specific) return specific;
   }
-  return EngineUtilities::TSharedPointer<T>();
+  return {};
 }

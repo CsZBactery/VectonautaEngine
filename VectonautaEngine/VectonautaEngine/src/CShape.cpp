@@ -22,7 +22,7 @@ CShape::createShape(ShapeType shapeType) {
   switch (shapeType) {
   case ShapeType::CIRCLE: {
     auto circleSP = EngineUtilities::MakeShared<sf::CircleShape>(10.f);
-    circleSP->setFillColor(sf::Color::White);
+    circleSP->setFillColor(sf::Color::Green);
     m_shapePtr = circleSP.dynamic_pointer_cast<sf::Shape>();
     break;
   }
@@ -37,7 +37,7 @@ CShape::createShape(ShapeType shapeType) {
     triangleSP->setPoint(0, sf::Vector2f(0.f, 0.f));
     triangleSP->setPoint(1, sf::Vector2f(50.f, 100.f));
     triangleSP->setPoint(2, sf::Vector2f(100.f, 0.f));
-    triangleSP->setFillColor(sf::Color::White);
+    triangleSP->setFillColor(sf::Color::Blue);
     m_shapePtr = triangleSP.dynamic_pointer_cast<sf::Shape>();
     break;
   }
@@ -48,7 +48,7 @@ CShape::createShape(ShapeType shapeType) {
     polygonSP->setPoint(2, sf::Vector2f(100.f, 0.f));
     polygonSP->setPoint(3, sf::Vector2f(75.f, -50.f));
     polygonSP->setPoint(4, sf::Vector2f(-25.f, -50.f));
-    polygonSP->setFillColor(sf::Color::White);
+    polygonSP->setFillColor(sf::Color::Red);
     m_shapePtr = polygonSP.dynamic_pointer_cast<sf::Shape>();
     break;
   }
@@ -59,11 +59,18 @@ CShape::createShape(ShapeType shapeType) {
   }
 }
 
-/*
-CShape::CShape(ShapeType shapeType)
-{
+CShape::CShape()
+  : Component(ComponentType::SHAPE),
+  m_shapePtr(nullptr),
+  m_shapeType(ShapeType::EMPTY) {
 }
-*/
+
+CShape::CShape(ShapeType shapeType)
+  : Component(ComponentType::SHAPE),
+  m_shapePtr(nullptr),
+  m_shapeType(ShapeType::EMPTY) {
+  createShape(shapeType);
+}
 
 
 void
@@ -78,7 +85,7 @@ CShape::update(float deltaTime) {
 
 void
 CShape::destroy() {
-  m_shapePtr.reset();
+
 }
 
 

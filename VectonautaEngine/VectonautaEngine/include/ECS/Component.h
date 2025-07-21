@@ -17,7 +17,7 @@ class
 enum
   ComponentType {
   None = 0,       ///< No component
-  TRANFORM = 1,   ///< Transform component (position, rotation, scale)
+  TRANSFORM = 1,   ///< Transform component (position, rotation, scale)
   SRPITE = 2,     ///< Sprite component (2D image)
   RENDERER = 3,   ///< Renderer component
   PHYSICS = 4,    ///< Physics simulation component

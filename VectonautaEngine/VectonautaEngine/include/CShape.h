@@ -1,4 +1,4 @@
-﻿﻿#pragma once
+﻿#pragma once
 
 /**
  * @file CShape.h
@@ -23,7 +23,7 @@ public:
   /**
    * @brief Default constructor.
    */
-  CShape() = default;
+  CShape();
 
   /**
    * @brief Constructs a CShape component with a specific shape type.

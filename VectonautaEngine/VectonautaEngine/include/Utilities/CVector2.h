@@ -26,7 +26,7 @@ public:
    */
   CVector2(float x, float y) : x(x), y(y) {}
 
-  // Arithmetic operators 
+  // Arithmetic operators
   CVector2
     operator+(const CVector2& other) const {
     return CVector2(x + other.x, y + other.y);
