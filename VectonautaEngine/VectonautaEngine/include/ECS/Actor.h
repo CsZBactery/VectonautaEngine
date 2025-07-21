@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "CShape.h"
 #include "Transform.h"
+#include "../../Texture.h"
 
 class Window;
 /**
@@ -63,6 +64,9 @@ public:
    */
   template <typename T>
   EngineUtilities::TSharedPointer<T> getComponent();
+
+  void
+    setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
 
 private:
   /**

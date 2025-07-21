@@ -185,3 +185,10 @@ sf::Shape* CShape::getShape()
 {
   return nullptr;
 }
+
+void
+Cshape::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
+  if (!texture.isNull()) {
+    m_shapePtr->setTexture(&texture->getTexture());
+  }
+}

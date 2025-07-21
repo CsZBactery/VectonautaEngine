@@ -1,6 +1,7 @@
-#include "ECS/Actor.h"
+#include "Actor.h"
 #include "CShape.h"
-#include "ECS/Transform.h"
+#include "Transform.h"
+#include "Texture.h
 
 Actor::Actor(const std::string& actorName) {
   m_name = actorName;
@@ -39,3 +40,13 @@ void Actor::render(const EngineUtilities::TSharedPointer<Window>& window) {
     }
   }
 }
+
+void
+Actor::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
+  auto shape = getComponent<CShape>();
+  if (shape) {
+    if (!texture.isNull()) {
+      shape->setTexture(texture);
+      addComponent(texture);
+    }
+  }

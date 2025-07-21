@@ -96,7 +96,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include\ECS</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
@@ -117,7 +117,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include\ECS</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,7 +135,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include\ECS</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
@@ -156,7 +156,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include\ECS</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -187,6 +187,7 @@
     <ClInclude Include="include\Memory\TWeakPointer.h" />
     <ClInclude Include="include\Prerequisites.h" />
     <ClInclude Include="include\Window.h" />
+    <ClInclude Include="Texture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
