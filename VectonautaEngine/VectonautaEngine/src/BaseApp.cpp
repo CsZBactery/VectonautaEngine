@@ -1,5 +1,6 @@
 #include "Prerequisites.h"
 #include "BaseApp.h"
+#include "ResourceManager.h" 
 #include "ECS/Actor.h"
 #include "ECS/Transform.h"    // <— asegúrate de incluir Transform
 #include <cmath>  
@@ -71,6 +72,14 @@ bool BaseApp::init() {
     if (transform) {
       transform->setPosition(sf::Vector2f(100.f, 150.f));
     }
+
+    //Cargar la textura para el actor
+    if (!resourceMan.loadTexture("Sprites/Mario", "png")) {
+      MESSAGE("BaseApp", "Init", "Can´t load the texture")
+    }
+
+    m_circleActor->setTexture(resourceMan.getTexture("Sprites/Mario"));
+    //m_circleActor->setName("Circle Actor)
 
     m_waypoints = {
         {400.f, 150.f},

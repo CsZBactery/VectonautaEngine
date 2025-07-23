@@ -171,6 +171,7 @@
     <ClCompile Include="src\CShape.cpp" />
     <ClCompile Include="src\ECS\Actor.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ResourceManager.cpp" />
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +187,7 @@
     <ClInclude Include="include\Memory\TUniquePtr.h" />
     <ClInclude Include="include\Memory\TWeakPointer.h" />
     <ClInclude Include="include\Prerequisites.h" />
+    <ClInclude Include="include\ResourceManager.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>

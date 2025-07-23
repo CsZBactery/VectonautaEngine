@@ -4,12 +4,14 @@
  * @brief Defines the BaseApp class, which manages the main application loop and rendering.
  */
 
-#include "../include/Prerequisites.h"
-#include <Window.h>
+#include "Prerequisites.h"
+#include "ResourceManager.h"
+#include "Window.h"
 #include "CShape.h" 
 #include "ECS/Actor.h"
 
 #include <vector>
+#include <SFML/System/Vector2.hpp> // para sf::Vector2f
 
  /**
   * @class BaseApp
@@ -71,7 +73,8 @@ private:
 
 
 
-
+  ResourceManager    resourceMan;
   std::vector<sf::Vector2f> m_waypoints; ///< Posiciones a seguir por el actor.
   int m_currentWaypointIndex = 0;        ///< Indice del waypoint.
+ 
 };
