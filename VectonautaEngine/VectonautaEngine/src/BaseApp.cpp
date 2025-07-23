@@ -65,12 +65,13 @@ bool BaseApp::init() {
     auto shape = m_circleActor->getComponent<CShape>();
     if (shape) {
       shape->createShape(ShapeType::CIRCLE);
-      shape->setFillColor(sf::Color::Yellow);
+      shape->setFillColor(sf::Color::White);
     }
 
     auto transform = m_circleActor->getComponent<Transform>();
     if (transform) {
       transform->setPosition(sf::Vector2f(100.f, 150.f));
+      transform->setScale({ 3.f, 3.f });
     }
 
     //Cargar la textura para el actor
