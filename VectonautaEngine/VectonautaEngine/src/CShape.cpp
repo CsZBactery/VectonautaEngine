@@ -1,7 +1,9 @@
+#include "Prerequisites.h"
 #include "CShape.h"
 #include "Window.h"
 #include "Memory/TUniquePtr.h"
 #include <Memory/TSharedPointer.h>
+#include <ECS/Texture.h>
 /**
  * @file CShape.cpp
  * @brief Implementation of the CShape class for creating and manipulating different SFML shapes.
@@ -187,8 +189,9 @@ sf::Shape* CShape::getShape()
 }
 
 void
-Cshape::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
-  if (!texture.isNull()) {
+CShape::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
+  if (m_shapePtr.get() && texture && !texture.isNull()) {
+    // sf::Shape::setTexture recibe puntero a sf::Texture
     m_shapePtr->setTexture(&texture->getTexture());
   }
 }

@@ -1,40 +1,45 @@
 #pragma once
-#include "../Prerequisites.h"
-#include "Component.h"
 
-class Texture :
-  public Component {
+#include "Prerequisites.h"
+#include <ECS/Component.h>
+#include "Window.h"
+#include <string>
+#include <iostream>
+
+class Window;  
+
+class Texture : public Component {
 public:
-  Texture() = default;
-
-  Texture(const std::string& textureName, const std : string & extension = "png") :
-    m_textureName(textureName), m_extension(extension), Component(TEXTURE) {
-    if (!m_texture.loadFromfile(m_textureName + "." m_extension)) {
-      std::cout << "Error de carga de textura: " << m_textureName << "." << m_extension << std::endl;
+  Texture(const std::string& textureName,
+    const std::string& extension = "png")
+    : Component(ComponentType::TEXTURE),
+    m_textureName(textureName),
+    m_extension(extension)
+  {
+    std::string path = m_textureName + "." + m_extension;
+    if (!m_texture.loadFromFile(path)) {
+      std::cerr << "Error al cargar textura: " << path << std::endl;
     }
+    m_sprite.setTexture(m_texture);
   }
-  virtual
-    ~Texture() = default;
 
-  void
-    start() override {};
+  ~Texture() override = default;
 
-  void
-    update(float deltaTime) override;
+  void start()   override {}    // nada que hacer
+  void update(float) override {} // nada que hacer
 
-  void
-    render(const EngineUtilities::TSharedPointer<Window>& window) override;
-
-  void
-    destroy() override;
-
-  sf::Texture &
-    getTexture() {
-    return m_texture;
+  // si prefieres inline:
+  void render(const EngineUtilities::TSharedPointer<Window>& window) override {
+    window->draw(m_sprite);
   }
+
+  void destroy() override {}    // SFML limpia sola
+
+  sf::Texture& getTexture() { return m_texture; }
 
 private:
-  sf::Texture m_texture;
-  sf::string m_textureName;
-  sf::string m_extension;
+  sf::Texture   m_texture;
+  sf::Sprite    m_sprite;
+  std::string   m_textureName;
+  std::string   m_extension;
 };

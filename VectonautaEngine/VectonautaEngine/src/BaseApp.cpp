@@ -1,3 +1,4 @@
+#include "Prerequisites.h"
 #include "BaseApp.h"
 #include "ECS/Actor.h"
 #include "ECS/Transform.h"    // <— asegúrate de incluir Transform
@@ -32,7 +33,7 @@ int BaseApp::run() {
   }
 
   destroy();
-  return 0;
+  
 }
 
 // Inicializa la ventana y los actores

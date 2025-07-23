@@ -9,6 +9,7 @@
 #include "Memory/TSharedPointer.h"
 #include "Memory/TUniquePtr.h"
 #include "ECS/Component.h"
+#include <ECS/Texture.h>
 
   class Window;
 
@@ -111,6 +112,9 @@ public:
    * @return Pointer to the internal SFML shape, or nullptr if not set.
    */
   sf::Shape* getShape();
+
+  void 
+    setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
 
 private:
   EngineUtilities::TSharedPointer<sf::Shape> m_shapePtr; ///< Smart pointer to the SFML shape.

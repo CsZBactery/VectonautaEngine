@@ -1,7 +1,7 @@
-#include "Actor.h"
+#include "ECS/Actor.h"
 #include "CShape.h"
-#include "Transform.h"
-#include "Texture.h
+#include "ECS/Transform.h"
+#include "ECS/Texture.h"
 
 Actor::Actor(const std::string& actorName) {
   m_name = actorName;
@@ -50,3 +50,4 @@ Actor::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
       addComponent(texture);
     }
   }
+}

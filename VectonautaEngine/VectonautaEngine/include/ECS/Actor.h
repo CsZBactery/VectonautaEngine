@@ -2,8 +2,8 @@
 #include "../Prerequisites.h"
 #include "Entity.h"
 #include "CShape.h"
-#include "Transform.h"
-#include "../../Texture.h"
+#include "ECS/Transform.h"
+#include <ECS/Texture.h>
 
 class Window;
 /**
