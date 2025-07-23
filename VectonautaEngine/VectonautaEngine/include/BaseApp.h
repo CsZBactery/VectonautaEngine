@@ -69,7 +69,8 @@ public:
 private:
   EngineUtilities::TSharedPointer<Window> m_windowPtr;   //Pointer to custom Window class.
   EngineUtilities::TSharedPointer<CShape> m_shapePtr;    //Pointer to custom shape class.
-  EngineUtilities::TSharedPointer<Actor> m_circleActor;
+  EngineUtilities::TSharedPointer<Actor>  m_circleActor;
+  EngineUtilities::TSharedPointer<Actor>  m_trackActor;
 
 
 

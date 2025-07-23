@@ -185,7 +185,7 @@ CShape::setScale(const sf::Vector2f& scale) {
 
 sf::Shape* CShape::getShape()
 {
-  return nullptr;
+  return m_shapePtr.get();
 }
 
 void
