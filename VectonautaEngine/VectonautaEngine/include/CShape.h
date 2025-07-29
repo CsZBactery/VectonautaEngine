@@ -5,10 +5,10 @@
  * @brief Declares the CShape class used to represent 2D shapes as components in the ECS system.
  */
 
-#include "Prerequisites.h"
-#include "Memory/TSharedPointer.h"
-#include "Memory/TUniquePtr.h"
-#include "ECS/Component.h"
+#include <Prerequisites.h>
+#include <Memory/TSharedPointer.h>
+#include <Memory/TUniquePtr.h>
+#include <ECS/Component.h>
 #include <ECS/Texture.h>
 
   class Window;

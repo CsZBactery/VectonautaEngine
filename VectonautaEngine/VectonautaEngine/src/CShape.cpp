@@ -2,7 +2,7 @@
 #include "CShape.h"
 #include "Window.h"
 #include "Memory/TUniquePtr.h"
-#include <Memory/TSharedPointer.h>
+#include "Memory/TSharedPointer.h"
 #include <ECS/Texture.h>
 /**
  * @file CShape.cpp
@@ -17,21 +17,21 @@
   *
   * @param shapeType The type of shape to create.
   */
-void
-CShape::createShape(ShapeType shapeType) {
+void CShape::createShape(ShapeType shapeType) {
   m_shapeType = shapeType;
 
   switch (shapeType) {
   case ShapeType::CIRCLE: {
     auto circleSP = EngineUtilities::MakeShared<sf::CircleShape>(10.f);
     circleSP->setFillColor(sf::Color::Green);
-    m_shapePtr = circleSP.dynamic_pointer_cast<sf::Shape>();
+    // Basta con asignar; la conversión de puntero derivado?base la hace el TSharedPointer
+    m_shapePtr = circleSP;
     break;
   }
   case ShapeType::RECTANGLE: {
     auto rectangleSP = EngineUtilities::MakeShared<sf::RectangleShape>(sf::Vector2f(100.f, 50.f));
     rectangleSP->setFillColor(sf::Color::White);
-    m_shapePtr = rectangleSP.dynamic_pointer_cast<sf::Shape>();
+    m_shapePtr = rectangleSP;
     break;
   }
   case ShapeType::TRIANGLE: {
@@ -40,7 +40,7 @@ CShape::createShape(ShapeType shapeType) {
     triangleSP->setPoint(1, sf::Vector2f(50.f, 100.f));
     triangleSP->setPoint(2, sf::Vector2f(100.f, 0.f));
     triangleSP->setFillColor(sf::Color::Blue);
-    m_shapePtr = triangleSP.dynamic_pointer_cast<sf::Shape>();
+    m_shapePtr = triangleSP;
     break;
   }
   case ShapeType::POLYGON: {
@@ -51,7 +51,7 @@ CShape::createShape(ShapeType shapeType) {
     polygonSP->setPoint(3, sf::Vector2f(75.f, -50.f));
     polygonSP->setPoint(4, sf::Vector2f(-25.f, -50.f));
     polygonSP->setFillColor(sf::Color::Red);
-    m_shapePtr = polygonSP.dynamic_pointer_cast<sf::Shape>();
+    m_shapePtr = polygonSP;
     break;
   }
   default:
@@ -60,6 +60,7 @@ CShape::createShape(ShapeType shapeType) {
     return;
   }
 }
+
 
 CShape::CShape()
   : Component(ComponentType::SHAPE),

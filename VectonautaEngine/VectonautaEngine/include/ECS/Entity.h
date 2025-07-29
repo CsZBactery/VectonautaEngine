@@ -1,6 +1,6 @@
 #pragma once
-#include "..//Prerequisites.h"
-#include "Component.h"
+#include <Prerequisites.h>
+#include <ECS/Component.h>
 
 class
   Window;

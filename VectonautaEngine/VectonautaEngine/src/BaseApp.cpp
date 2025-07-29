@@ -1,9 +1,9 @@
-#include "Prerequisites.h"
-#include "BaseApp.h"
-#include "ResourceManager.h" 
-#include "ECS/Actor.h"
-#include "ECS/Transform.h"
-#include "CShape.h"
+#include <Prerequisites.h>
+#include <BaseApp.h>
+#include <ResourceManager.h>
+#include <ECS/Actor.h>
+#include <ECS/Transform.h>
+#include <CShape.h>
 #include <cmath>  
 
 

@@ -96,14 +96,14 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-3.0.0\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-master;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-3.0\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)/lib/$(PlatformTarget)/$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
@@ -117,13 +117,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-3.0.0\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-master;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-3.0\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)/lib/$(PlatformTarget)/$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
@@ -135,14 +135,14 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-3.0.0\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-master;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-3.0\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)/lib/$(PlatformTarget)/$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
@@ -156,17 +156,23 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-3.0.0\include;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-master;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\SFML-2.6.1\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib/$(PlatformTarget)/;C:\Users\cesar\Documents\Unreal Projects\VectonautaEngine\VectonautaEngine\ThirdParties\imgui-sfml-3.0\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)/lib/$(PlatformTarget)/$(TargetName).lib</ImportLibrary>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\ThirdParties\imgui-master\imgui.cpp" />
+    <ClCompile Include="..\ThirdParties\imgui-master\imgui_demo.cpp" />
+    <ClCompile Include="..\ThirdParties\imgui-master\imgui_draw.cpp" />
+    <ClCompile Include="..\ThirdParties\imgui-master\imgui_tables.cpp" />
+    <ClCompile Include="..\ThirdParties\imgui-master\imgui_widgets.cpp" />
+    <ClCompile Include="..\ThirdParties\imgui-sfml-master\imgui-SFML.cpp" />
     <ClCompile Include="src\BaseApp.cpp" />
     <ClCompile Include="src\CShape.cpp" />
     <ClCompile Include="src\ECS\Actor.cpp" />
@@ -175,7 +181,15 @@
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CVector2.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imconfig.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imgui.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imgui_internal.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imstb_rectpack.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imstb_textedit.h" />
+    <ClInclude Include="..\ThirdParties\imgui-master\imstb_truetype.h" />
+    <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imconfig-SFML.h" />
+    <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imgui-SFML.h" />
+    <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imgui-SFML_export.h" />
     <ClInclude Include="include\BaseApp.h" />
     <ClInclude Include="include\CShape.h" />
     <ClInclude Include="include\ECS\Actor.h" />
@@ -188,6 +202,7 @@
     <ClInclude Include="include\Memory\TWeakPointer.h" />
     <ClInclude Include="include\Prerequisites.h" />
     <ClInclude Include="include\ResourceManager.h" />
+    <ClInclude Include="include\Utilities\CVector2.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>

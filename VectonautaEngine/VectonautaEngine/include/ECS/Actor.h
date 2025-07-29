@@ -1,8 +1,8 @@
 #pragma once
-#include "../Prerequisites.h"
-#include "Entity.h"
-#include "CShape.h"
-#include "ECS/Transform.h"
+#include "Prerequisites.h"
+#include <ECS/Entity.h>
+#include <CShape.h>
+#include <ECS/Transform.h>
 #include <ECS/Texture.h>
 
 class Window;

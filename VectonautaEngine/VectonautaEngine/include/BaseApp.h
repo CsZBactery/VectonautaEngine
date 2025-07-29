@@ -4,14 +4,14 @@
  * @brief Defines the BaseApp class, which manages the main application loop and rendering.
  */
 
-#include "Prerequisites.h"
-#include "ResourceManager.h"
-#include "Window.h"
-#include "CShape.h" 
-#include "ECS/Actor.h"
+#include <Prerequisites.h>
+#include <ResourceManager.h>
+#include <Window.h>
+#include <CShape.h> 
+#include <ECS/Actor.h>
 
 #include <vector>
-#include <SFML/System/Vector2.hpp> // para sf::Vector2f
+#include <SFML/System.hpp> // para sf::Vector2f
 
  /**
   * @class BaseApp

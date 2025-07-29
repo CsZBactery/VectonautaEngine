@@ -2,80 +2,60 @@
 
 /**
  * @file Prerequisites.h
- * @brief Includes common libraries, defines macros for error handling, and declares shared enums.
+ * @brief Includes standard libraries, project utilities, ImGui and SFML headers, and defines common macros.
  */
 
  // === Standard Libraries ===
-#include <iostream>     ///< Input/output stream.
-#include <string>       ///< std::string handling.
-#include <sstream>      ///< String stream for constructing messages.
-#include <vector>       ///< Dynamic array container.
-#include <thread>       ///< Multi-threading support.
-#include <map>          ///< Sorted associative container.
-#include <fstream>      ///< File input/output.
-#include <unordered_map>///< Hash table-based associative container.
+#include <iostream>     // std::cerr, std::cout
+#include <string>       // std::string
+#include <sstream>      // std::ostringstream
+#include <vector>       // std::vector
+#include <thread>       // std::thread
+#include <map>          // std::map
+#include <fstream>      // std::ifstream, std::ofstream
+#include <unordered_map>// std::unordered_map
 
-#include <Memory/TSharedPointer.h>
-#include <Memory/TStaticPtr.h>
-#include <Memory/TUniquePtr.h>
-
-
-
-// === Third Party Libraries ===
-#include <SFML/Graphics.hpp> ///< SFML graphics module.
+// === Engine Utilities ===
+#include "Memory/TSharedPointer.h"  // EngineUtilities::TSharedPointer
+#include "Memory/TStaticPtr.h"     // EngineUtilities::TStaticPtr (if used)
+#include "Memory/TUniquePtr.h"     // EngineUtilities::TUniquePtr
 
 // === ImGui ===
-// Add ImGui headers here if used in the future
+#include <imgui.h>
+#include <imgui-SFML.h>          // ImGui SFML binding
+
+// === SFML ===
+#include <SFML/Graphics.hpp>      // SFML graphics module (RenderWindow, Drawable, etc.)
 
 // === Macros ===
 
-/**
- * @brief Safely deletes a pointer and sets it to nullptr to avoid dangling references.
- */
-#define SAFE_PTR_RELEASE(x) if(x != nullptr) { delete x; x = nullptr; }
+/// Safely deletes a raw pointer and nulls it
+#define SAFE_PTR_RELEASE(x) if ((x) != nullptr) { delete (x); (x) = nullptr; }
 
- /**
-  * @brief Logs a resource creation message to standard error.
-  *
-  * @param classObj Name of the class.
-  * @param method Name of the method.
-  * @param state Message indicating resource state.
-  */
-#define MESSAGE(classObj, method, state)                            \
-{                                                                   \
-    std::ostringstream os_;                                         \
-    os_ << classObj << "::" << method                                \
-        << " : [CREATION OF RESOURCE: " << state << "]\n";         \
-    std::cerr << os_.str();                                         \
-}
+/// Logs a resource creation message
+#define MESSAGE(classObj, method, state)                      \
+    do {                                                      \
+        std::ostringstream os_;                              \
+        os_ << classObj << "::" << method                   \
+            << " : [CREATION OF RESOURCE: " << state << "]"; \
+        std::cerr << os_.str();                               \
+    } while (0)
 
-  /**
-   * @brief Logs an error message and terminates the program.
-   *
-   * @param classObj Name of the class.
-   * @param method Name of the method.
-   * @param errorMSG Description of the error.
-   */
-#define ERROR(classObj, method, errorMSG)                           \
-{                                                                   \
-    std::ostringstream os_;                                         \
-    os_ << "ERROR: " << classObj << "::" << method                   \
-        << " : Error in data from params [" << errorMSG << "]\n";   \
-    std::cerr << os_.str();                                         \
-    std::exit(1);                                                   \
-}
+  /// Logs an error message and exits
+#define ERROR(classObj, method, errorMSG)                             \
+    do {                                                             \
+        std::ostringstream os_;                                      \
+        os_ << "ERROR: " << classObj << "::" << method            \
+            << " : Error in data from params [" << errorMSG << "]"; \
+        std::cerr << os_.str();                                      \
+        std::exit(1);                                                \
+    } while (0)
 
-   // === Enumerations ===
-
-   /**
-    * @enum ShapeType
-    * @brief Types of shapes that can be created in the system.
-    */
-enum
-  ShapeType {
-  EMPTY = 0,    ///< No shape.
-  CIRCLE = 1,   ///< Circle shape.
-  RECTANGLE = 2,///< Rectangle shape.
-  TRIANGLE = 3, ///< Triangle shape using a convex polygon.
-  POLYGON = 4   ///< General polygon with 5 or more points.
+  // === Enumerations ===
+  enum ShapeType {
+  EMPTY = 0,  ///< No shape
+  CIRCLE = 1,  ///< Circle
+  RECTANGLE = 2,  ///< Rectangle
+  TRIANGLE = 3,  ///< Triangle (ConvexShape)
+  POLYGON = 4   ///< Polygon (>=5 points)
 };

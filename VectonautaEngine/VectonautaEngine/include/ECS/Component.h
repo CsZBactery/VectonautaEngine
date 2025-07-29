@@ -5,7 +5,7 @@
  * @brief Declares the base Component class and ComponentType enumeration for entity components.
  */
 
-#include "../Prerequisites.h"
+#include <Prerequisites.h>
 
 class
   Window;

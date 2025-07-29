@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Prerequisites.h"
+#include <Prerequisites.h>
 #include <unordered_map>
-#include "ECS/Texture.h"
+#include <ECS/Texture.h>
 
 class ResourceManager {
 public:
