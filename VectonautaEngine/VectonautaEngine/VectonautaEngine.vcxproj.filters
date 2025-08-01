@@ -60,6 +60,9 @@
     <ClCompile Include="..\ThirdParties\imgui-sfml-master\imgui-SFML.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\EngineGUI.cpp">
+      <Filter>Archivos de recursos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Prerequisites.h">
@@ -98,9 +101,6 @@
     <ClInclude Include="include\ECS\Transform.h">
       <Filter>ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>ECS</Filter>
-    </ClInclude>
     <ClInclude Include="include\ResourceManager.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
@@ -133,6 +133,12 @@
     </ClInclude>
     <ClInclude Include="include\Utilities\CVector2.h">
       <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ECS\Texture.h">
+      <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EngineGUI.h">
+      <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

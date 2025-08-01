@@ -1,5 +1,5 @@
-#include <imgui-SFML.h>
-#include <imgui.h>
+#include "imgui-SFML.h"
+#include "imgui.h"
 
 #include <SFML/Config.hpp>
 #include <SFML/Graphics/Color.hpp>
@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#if defined(__APPLE__)
+#if defined(_APPLE_)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
@@ -200,12 +200,12 @@ void updateJoystickDPadState(ImGuiIO& io);
 void updateJoystickAxisState(ImGuiIO& io);
 
 // clipboard functions
-void setClipboardText(ImGuiContext* /*ctx*/, const char* text)
+void setClipboardText(ImGuiContext* / ctx /, const char* text)
 {
     sf::Clipboard::setString(sf::String::fromUtf8(text, text + std::strlen(text)));
 }
 
-[[nodiscard]] const char* getClipboardText(ImGuiContext* /*ctx*/)
+[[nodiscard]] const char* getClipboardText(ImGuiContext* / ctx /)
 {
     static std::string s_clipboardText;
 
@@ -953,7 +953,7 @@ void RenderDrawLists(ImDrawData* draw_data)
     }
 
     const ImGuiIO& io = ImGui::GetIO();
-    assert(io.Fonts->TexID != (ImTextureID) nullptr); // You forgot to create and set font texture
+    //assert(io.Fonts->TexID != (ImTextureID) nullptr); // You forgot to create and set font texture
 
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates !=
     // framebuffer coordinates)

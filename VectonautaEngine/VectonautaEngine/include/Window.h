@@ -75,10 +75,11 @@ public:
   void render();
 
 private:
-  EngineUtilities::TUniquePtr<sf::RenderWindow> m_windowPtr;  ///< SFML window pointer
+    ///< SFML window pointer
   sf::View                                    m_view;        ///< Current view
 
 public:
+EngineUtilities::TUniquePtr<sf::RenderWindow> m_windowPtr;
   sf::Clock   clock;      ///< Clock to measure frame time
   sf::Time    deltaTime;  ///< Time elapsed since last frame
 };
