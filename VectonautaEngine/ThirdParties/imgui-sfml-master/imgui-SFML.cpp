@@ -1,5 +1,5 @@
 #include "imgui-SFML.h"
-#include "imgui.h"
+#include <imgui.h>
 
 #include <SFML/Config.hpp>
 #include <SFML/Graphics/Color.hpp>
@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#if defined(_APPLE_)
+#if defined(__APPLE__)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
@@ -200,12 +200,12 @@ void updateJoystickDPadState(ImGuiIO& io);
 void updateJoystickAxisState(ImGuiIO& io);
 
 // clipboard functions
-void setClipboardText(ImGuiContext* / ctx /, const char* text)
+void setClipboardText(ImGuiContext* /*ctx*/, const char* text)
 {
     sf::Clipboard::setString(sf::String::fromUtf8(text, text + std::strlen(text)));
 }
 
-[[nodiscard]] const char* getClipboardText(ImGuiContext* / ctx /)
+[[nodiscard]] const char* getClipboardText(ImGuiContext* /*ctx*/)
 {
     static std::string s_clipboardText;
 
