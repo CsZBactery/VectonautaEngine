@@ -10,6 +10,12 @@ class Window;
 
 class EngineGUI {
 public:
+  enum class Theme {
+    Grey = 0,
+    Dark = 1,
+    VectonautaEngine = 2
+  };
+
   EngineGUI() = default;
   ~EngineGUI() = default;
 
@@ -18,10 +24,12 @@ public:
   void render(const EngineUtilities::TSharedPointer<Window>& window);
   void destroy();
 
+  // Estilos
   void setupGreyGUIStyle();
   void setupDarkGUIStyle();
+  void setupVectonautaEngineStyle();
 
-  // Ahora recibe ventana también
+  // Eventos
   void processEvent(const EngineUtilities::TSharedPointer<Window>& window, const sf::Event& event);
 
   // Flags / estados expuestos
@@ -30,15 +38,21 @@ public:
   bool shouldResetWaypoints(); // consume el flag y lo resetea
   float getSpeedMultiplier() const { return m_speedMultiplier; }
 
-  // Auxiliares
+  // Tema actual
+  Theme getCurrentTheme() const { return m_currentTheme; }
+  void setTheme(Theme theme);
+
   void togglePause() { m_paused = !m_paused; }
 
 private:
   void renderMenuBar();
   void renderControlPanel(); // panel flotante
 
+  // Estado interno
   bool m_requestQuit = false;
   bool m_paused = false;
   bool m_requestReset = false;
   float m_speedMultiplier = 1.0f; // multiplicador de velocidad
+
+  Theme m_currentTheme = Theme::VectonautaEngine;
 };
