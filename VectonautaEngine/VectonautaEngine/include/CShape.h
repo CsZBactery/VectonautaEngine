@@ -15,7 +15,7 @@ class Window;
 
 /**
  * @class CShape
- * @brief A component that representa una forma 2D con SFML y puede tener textura.
+ * @brief A component que representa una forma 2D con SFML y puede tener textura.
  */
 class CShape : public Component {
 public:
@@ -23,10 +23,10 @@ public:
   explicit CShape(ShapeType shapeType);
   ~CShape() override = default;
 
-  void start() override {}
-  void update(float /*deltaTime*/) override {}
+  void start() override;
+  void update(float deltaTime) override;
   void render(const EngineUtilities::TSharedPointer<Window>& window) override;
-  void destroy() override {}
+  void destroy() override;
 
   void createShape(ShapeType shapeType);
 

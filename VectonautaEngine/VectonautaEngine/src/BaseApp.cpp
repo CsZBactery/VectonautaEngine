@@ -1,14 +1,13 @@
-#include <SFML/Graphics.hpp>
 #include "BaseApp.h"
 #include "Prerequisites.h"
 #include "Window.h"
 #include "EngineGUI.h"
 #include "A_Racer.h"
 #include "ECS/Transform.h"
+#include <SFML/Graphics.hpp>
 #include <cmath>
-#include <iostream>
 
-// Helper para checar si un punto cruzó línea de meta
+// Helper para detectar cruce de meta
 static bool crossedFinishLine(const sf::Vector2f& position, const sf::FloatRect& finishRect) {
   return finishRect.contains(position);
 }
@@ -17,14 +16,14 @@ BaseApp::~BaseApp() {}
 
 int BaseApp::run() {
   if (!init()) {
-    ERROR("BaseApp", "run", "Initialization failed", "Check init() logic");
+    ERROR("BaseApp", "run", "Initialization failed", "Check init()");
     return -1;
   }
 
   float raceTimer = 0.f;
 
   while (m_windowPtr->isOpen()) {
-    // === Eventos ===
+    // Eventos
     m_windowPtr->handleEvents([&](const sf::Event& event) {
       gui.processEvent(m_windowPtr, event);
       if (event.is<sf::Event::Closed>()) {
@@ -32,14 +31,14 @@ int BaseApp::run() {
       }
       });
 
-    // === Tiempo ===
+    // Tiempo
     m_windowPtr->update();
     float dt = m_windowPtr->deltaTime.asSeconds();
     if (!gui.isPaused()) {
       raceTimer += dt * gui.getSpeedMultiplier();
     }
 
-    // === Lógica de carrera ===
+    // Actualizar racers
     for (auto& racer : m_racers) {
       if (!racer) continue;
 
@@ -58,7 +57,7 @@ int BaseApp::run() {
       }
     }
 
-    // === Reset global pedido por GUI ===
+    // Reset global si se pidió
     if (gui.shouldResetWaypoints()) {
       for (auto& racer : m_racers) {
         if (racer) racer->reset();
@@ -67,14 +66,14 @@ int BaseApp::run() {
       raceTimer = 0.f;
     }
 
-    // === Pasar estado a GUI ===
+    // Pasar estado a GUI
     gui.setRacers(m_racers);
     gui.update(m_windowPtr, m_windowPtr->deltaTime);
     if (gui.shouldQuit()) {
       m_windowPtr->close();
     }
 
-    // === Render ===
+    // Render
     m_windowPtr->clear(sf::Color::Black);
 
     if (!m_trackActor.isNull()) {
@@ -82,9 +81,8 @@ int BaseApp::run() {
     }
 
     for (auto& racer : m_racers) {
-      if (racer) {
+      if (racer)
         racer->render(m_windowPtr);
-      }
     }
 
     gui.render(m_windowPtr);
@@ -96,23 +94,23 @@ int BaseApp::run() {
 }
 
 bool BaseApp::init() {
-  // 1) Ventana
+  // Crear ventana
   m_windowPtr = EngineUtilities::MakeShared<Window>(1920, 1080, "VectonautaEngine");
   if (!m_windowPtr) {
-    ERROR("BaseApp", "init", "Failed to create window", "Check memory allocation");
+    ERROR("BaseApp", "init", "Failed to create window", "");
     return false;
   }
 
-  // 2) GUI
+  // Inicializar GUI
   gui.init(m_windowPtr);
 
-  // 3) Fondo / pista
+  // Cargar pista
   if (!resourceMan.loadTexture("Sprites/Track", "png")) {
     MESSAGE("BaseApp", "init", "Cannot load Track.png");
   }
   auto trackTex = resourceMan.getTexture("Sprites/Track");
   if (trackTex.isNull()) {
-    ERROR("BaseApp", "init", "Track texture null");
+    ERROR("BaseApp", "init", "Track texture null", "");
     return false;
   }
 
@@ -132,7 +130,7 @@ bool BaseApp::init() {
     shape->setScale({ scaleX, scaleY });
   }
   else {
-    ERROR("BaseApp", "init", "Failed to get CShape from track actor");
+    ERROR("BaseApp", "init", "Failed to get CShape from track actor", "");
     return false;
   }
   m_trackActor->setTexture(trackTex);
@@ -140,14 +138,13 @@ bool BaseApp::init() {
     xf->setPosition({ 0.f, 0.f });
   }
 
-  // 4) Definir ruta de la pista
+  // Definir ruta (ajústala a tu pista real)
   m_path = {
     {100.f, 150.f}, {300.f, 140.f}, {500.f, 160.f}, {700.f, 300.f},
     {900.f, 280.f}, {1100.f, 500.f}, {1300.f, 480.f}, {1500.f, 450.f}
-    // agrégale más puntos para que siga mejor tu pista real
   };
 
-  // 5) Crear racers
+  // Crear racers
   m_racers.clear();
   auto racer1 = EngineUtilities::MakeShared<A_Racer>("Racer 1", 1);
   auto racer2 = EngineUtilities::MakeShared<A_Racer>("Racer 2", 2);
@@ -170,24 +167,22 @@ bool BaseApp::init() {
   m_racers.push_back(racer1);
   m_racers.push_back(racer2);
 
-  // 6) Línea de meta (ajústala a tu pista)
-  m_finishLine = sf::FloatRect(sf::Vector2f(1800.f, 500.f), sf::Vector2f(50.f, 200.f));
+  // Línea de meta
+  m_finishLine:(1800.f, 500.f, 50.f, 200.f);
 
-
-  // 7) Inicializar GUI con racers
+  // Estado inicial GUI
   gui.setRacers(m_racers);
-
   return true;
 }
 
 void BaseApp::update() {
-  // lógica integrada en run()
+  // Lógica ya en run()
 }
 
 void BaseApp::render() {
-  // ya se hace en run()
+  // Ya integrado
 }
 
 void BaseApp::destroy() {
-  // limpieza extra si aplica
+  // Limpieza adicional si aplica
 }

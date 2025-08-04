@@ -1,4 +1,7 @@
-#include "Actor.h"
+#include "ECS/Actor.h"
+#include "CShape.h"
+#include "ECS/Transform.h"
+#include "ECS/Texture.h"
 #include "Window.h"
 
 void Actor::update(float deltaTime) {
@@ -6,12 +9,8 @@ void Actor::update(float deltaTime) {
   auto shape = getComponent<CShape>();
 
   if (transform && shape) {
-    // Aplica el transform guardado al shape
-    if (sf::Shape* rawShape = shape->getShape()) {
-      // Como sf::Shape hereda de Transformable, se aplican manualmente
-      rawShape->setPosition(transform->getPosition());
-      rawShape->setRotation(sf::degrees(transform->getRotation()));
-      rawShape->setScale(transform->getScale());
+    if (auto rawShape = shape->getShape()) {
+      transform->applyTo(*rawShape);
     }
   }
 }

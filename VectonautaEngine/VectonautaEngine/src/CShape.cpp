@@ -1,15 +1,17 @@
 #include "CShape.h"
-#include "Window.h" // si necesitas para draw; aquí asumimos que Window expone draw(sf::Drawable)
+#include "Window.h"
 
 CShape::CShape()
   : Component(ComponentType::SHAPE)
   , m_shapeType(ShapeType::EMPTY)
 {
+  // Forma por defecto para evitar puntero nulo
+  createShape(ShapeType::CIRCLE);
 }
 
 CShape::CShape(ShapeType shapeType)
   : Component(ComponentType::SHAPE)
-  , m_shapeType(ShapeType::EMPTY) // se sobrescribe en createShape
+  , m_shapeType(ShapeType::EMPTY)
 {
   createShape(shapeType);
 }
@@ -52,14 +54,17 @@ void CShape::createShape(ShapeType shapeType) {
   }
   default:
     m_shapePtr.reset();
-    ERROR("CShape", "createShape", "Unknown shape type"); // tu macro de logging
+    ERROR("CShape", "createShape", "Unknown shape type");
     return;
   }
 }
 
+void CShape::start() {}
+void CShape::update(float) {}
+void CShape::destroy() {}
+
 void CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
   if (m_shapePtr) {
-    // Asumimos que Window tiene método draw compatible
     window->draw(*m_shapePtr);
   }
   else {
@@ -69,7 +74,7 @@ void CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
 
 void CShape::setPosition(float x, float y) {
   if (m_shapePtr) {
-    m_shapePtr->setPosition(x, y);
+    m_shapePtr->setPosition(sf::Vector2f(x, y));
   }
   else {
     ERROR("CShape", "setPosition", "Shape is not initialized.");
@@ -87,7 +92,6 @@ void CShape::setPosition(const sf::Vector2f& position) {
 
 void CShape::setFillColor(const sf::Color& color) {
   if (m_shapePtr) {
-    // Solo algunas formas implementan setFillColor, pero sf::Shape lo tiene
     m_shapePtr->setFillColor(color);
   }
   else {

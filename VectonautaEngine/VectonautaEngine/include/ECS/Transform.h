@@ -3,7 +3,8 @@
 #include "Prerequisites.h"
 #include "ECS/Component.h"
 #include <SFML/System/Vector2.hpp>
-#include <SFML/Graphics/Transformable.hpp> // para applyTo ejemplo
+#include <SFML/System/Angle.hpp>        // para sf::degrees
+#include <SFML/Graphics/Transformable.hpp> // para applyTo
 #include <cmath>
 
 namespace EngineUtilities { template<typename T> class TSharedPointer; }

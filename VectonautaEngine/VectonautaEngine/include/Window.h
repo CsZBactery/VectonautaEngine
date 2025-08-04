@@ -2,42 +2,68 @@
 
 #include "Prerequisites.h"
 #include "Memory/TUniquePtr.h"
-#include <string>
+
 #include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp> // por sf::RenderWindow, drawable, etc.
+#include <SFML/Graphics.hpp> // sf::RenderWindow, sf::Drawable, sf::Color
 #include <functional>
+#include <string>
 
 /**
  * @file Window.h
- * @brief Wrapper around SFML RenderWindow for window management and rendering.
+ * @brief Wrapper ligero alrededor de sf::RenderWindow (SFML 3) con utilidades comunes.
  */
 class Window {
 public:
   Window() = default;
+
+  /**
+   * @brief Crea la ventana de una vez.
+   */
   Window(int width, int height, const std::string& title);
+
   ~Window();
 
-  // Ahora toma callback por evento
+  /**
+   * @brief Procesa los eventos pendientes.
+   * @param callback Función opcional que se llama por cada evento.
+   */
   void handleEvents(const std::function<void(const sf::Event&)>& callback = nullptr);
 
+  /// @return true si la ventana sigue abierta.
   bool isOpen() const;
+
+  /// Limpia con el color dado.
   void clear(const sf::Color& color = sf::Color::Black);
+
+  /**
+   * @brief Dibuja un drawable.
+   */
   void draw(const sf::Drawable& drawable,
     const sf::RenderStates& states = sf::RenderStates::Default);
+
+  /// Intercambia buffers / muestra en pantalla.
   void display();
-  void destroy();
+
+  /// Actualiza deltaTime interno.
   void update();
+
+  /// Paso de render extra (placeholder).
   void render();
 
-  void close(); // cerrar explícitamente
+  /// Cierra la ventana.
+  void close();
 
-  // Exponer el sf::RenderWindow subyacente (para ImGui-SFML)
-  sf::RenderWindow& getInternal() { return *m_windowPtr; }
+  /// Limpia recursos.
+  void destroy();
+
+  /// Acceso al sf::RenderWindow subyacente.
+  sf::RenderWindow& getInternal();
+
+  /// Tiempo entre frames, actualizado en update().
+  sf::Time deltaTime;
 
 private:
   sf::View                                    m_view;
-public:
   EngineUtilities::TUniquePtr<sf::RenderWindow> m_windowPtr;
   sf::Clock   clock;
-  sf::Time    deltaTime;
 };
