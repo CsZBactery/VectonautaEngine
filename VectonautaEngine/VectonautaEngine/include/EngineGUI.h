@@ -6,7 +6,9 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+namespace EngineUtilities { template<typename T> class TSharedPointer; }
 class Window;
+class A_Racer;
 
 class EngineGUI {
 public:
@@ -24,35 +26,34 @@ public:
   void render(const EngineUtilities::TSharedPointer<Window>& window);
   void destroy();
 
-  // Estilos
   void setupGreyGUIStyle();
   void setupDarkGUIStyle();
   void setupVectonautaEngineStyle();
 
-  // Eventos
   void processEvent(const EngineUtilities::TSharedPointer<Window>& window, const sf::Event& event);
 
-  // Flags / estados expuestos
+  void setRacers(const std::vector<EngineUtilities::TSharedPointer<A_Racer>>& racers);
+
   bool shouldQuit() const { return m_requestQuit; }
   bool isPaused() const { return m_paused; }
-  bool shouldResetWaypoints(); // consume el flag y lo resetea
+  bool shouldResetWaypoints();
   float getSpeedMultiplier() const { return m_speedMultiplier; }
 
-  // Tema actual
   Theme getCurrentTheme() const { return m_currentTheme; }
   void setTheme(Theme theme);
-
   void togglePause() { m_paused = !m_paused; }
 
 private:
   void renderMenuBar();
-  void renderControlPanel(); // panel flotante
+  void renderControlPanel();
+  void renderRacersPanel();
 
-  // Estado interno
   bool m_requestQuit = false;
   bool m_paused = false;
   bool m_requestReset = false;
-  float m_speedMultiplier = 1.0f; // multiplicador de velocidad
+  float m_speedMultiplier = 1.0f;
 
   Theme m_currentTheme = Theme::VectonautaEngine;
+
+  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;
 };

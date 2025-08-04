@@ -1,53 +1,36 @@
-#include "ECS/Actor.h"
-#include "CShape.h"
-#include "ECS/Transform.h"
-#include "ECS/Texture.h"
-
-Actor::Actor(const std::string& actorName) {
-  m_name = actorName;
-
-  auto shape = EngineUtilities::MakeShared<CShape>();
-  addComponent(shape);
-
-  auto transform = EngineUtilities::MakeShared<Transform>();
-  addComponent(transform);
-}
-
-void Actor::start() {
-  // nada que hacer aún
-}
-
-void Actor::destroy() {
-  // nada que hacer aún
-}
+#include "Actor.h"
+#include "Window.h"
 
 void Actor::update(float deltaTime) {
   auto transform = getComponent<Transform>();
   auto shape = getComponent<CShape>();
 
   if (transform && shape) {
-    // Si quieres, aplica el transform directamente al sf::Shape interno
-    if (auto sfshape = shape->getShape()) {
-      transform->applyTo(*sfshape); // posición, rotación (convierte a sf::Angle), escala
+    // Aplica el transform guardado al shape
+    if (sf::Shape* rawShape = shape->getShape()) {
+      // Como sf::Shape hereda de Transformable, se aplican manualmente
+      rawShape->setPosition(transform->getPosition());
+      rawShape->setRotation(sf::degrees(transform->getRotation()));
+      rawShape->setScale(transform->getScale());
     }
   }
 }
 
 void Actor::render(const EngineUtilities::TSharedPointer<Window>& window) {
-  for (auto& comp : components) {
-    auto shape = comp.template dynamic_pointer_cast<CShape>();
-    if (shape) {
+  for (const auto& comp : components) {
+    if (auto shape = comp.template dynamic_pointer_cast<CShape>()) {
       shape->render(window);
+    }
+    else if (auto textureComp = comp.template dynamic_pointer_cast<Texture>()) {
+      textureComp->render(window);
     }
   }
 }
 
 void Actor::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
-  auto shape = getComponent<CShape>();
-  if (shape) {
-    if (!texture.isNull()) {
-      shape->setTexture(texture);
-      addComponent(texture);
-    }
+  if (texture.isNull()) return;
+  if (auto shape = getComponent<CShape>()) {
+    shape->setTexture(texture);
   }
+  addComponent<Texture>(texture);
 }

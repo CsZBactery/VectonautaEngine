@@ -66,6 +66,9 @@
     <ClCompile Include="src\Texture.cpp">
       <Filter>Archivos de recursos</Filter>
     </ClCompile>
+    <ClCompile Include="src\A_Racer.cpp">
+      <Filter>Archivos de recursos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Prerequisites.h">
@@ -141,6 +144,9 @@
       <Filter>ECS</Filter>
     </ClInclude>
     <ClInclude Include="include\EngineGUI.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="include\A_Racer.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

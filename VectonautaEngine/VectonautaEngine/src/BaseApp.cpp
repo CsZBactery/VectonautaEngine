@@ -1,14 +1,17 @@
+#include <SFML/Graphics.hpp>
 #include "BaseApp.h"
 #include "Prerequisites.h"
 #include "Window.h"
 #include "EngineGUI.h"
-#include "CShape.h"
+#include "A_Racer.h"
 #include "ECS/Transform.h"
-#include "ECS/Actor.h"
 #include <cmath>
 #include <iostream>
-#include <imgui.h>
-#include <imgui-SFML.h>
+
+// Helper para checar si un punto cruzó línea de meta
+static bool crossedFinishLine(const sf::Vector2f& position, const sf::FloatRect& finishRect) {
+  return finishRect.contains(position);
+}
 
 BaseApp::~BaseApp() {}
 
@@ -18,73 +21,71 @@ int BaseApp::run() {
     return -1;
   }
 
-  while (m_windowPtr->isOpen()) {
-    // 1. Eventos: pasar cada evento al GUI y manejar cierre
-    m_windowPtr->handleEvents([&](const sf::Event& event) {
-      gui.processEvent(m_windowPtr, event); // ahora con la nueva firma
+  float raceTimer = 0.f;
 
+  while (m_windowPtr->isOpen()) {
+    // === Eventos ===
+    m_windowPtr->handleEvents([&](const sf::Event& event) {
+      gui.processEvent(m_windowPtr, event);
       if (event.is<sf::Event::Closed>()) {
         m_windowPtr->close();
       }
-      else if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-        if (static_cast<int>(key->scancode) == static_cast<int>(sf::Keyboard::Scancode::Escape)) {
-          m_windowPtr->close();
-        }
-      }
       });
 
-    // 2. Cerrar si se pidió desde el menú
+    // === Tiempo ===
+    m_windowPtr->update();
+    float dt = m_windowPtr->deltaTime.asSeconds();
+    if (!gui.isPaused()) {
+      raceTimer += dt * gui.getSpeedMultiplier();
+    }
+
+    // === Lógica de carrera ===
+    for (auto& racer : m_racers) {
+      if (!racer) continue;
+
+      if (!gui.isPaused()) {
+        racer->update(dt * gui.getSpeedMultiplier());
+      }
+
+      if (racer->getPlace() == 0) {
+        if (auto xf = racer->getComponent<Transform>()) {
+          if (crossedFinishLine(xf->getPosition(), m_finishLine)) {
+            int nextPlace = static_cast<int>(m_finishedOrder.size()) + 1;
+            racer->setPlace(nextPlace);
+            m_finishedOrder.push_back(racer);
+          }
+        }
+      }
+    }
+
+    // === Reset global pedido por GUI ===
+    if (gui.shouldResetWaypoints()) {
+      for (auto& racer : m_racers) {
+        if (racer) racer->reset();
+      }
+      m_finishedOrder.clear();
+      raceTimer = 0.f;
+    }
+
+    // === Pasar estado a GUI ===
+    gui.setRacers(m_racers);
+    gui.update(m_windowPtr, m_windowPtr->deltaTime);
     if (gui.shouldQuit()) {
       m_windowPtr->close();
     }
 
-    // 3. Actualizar tiempo y GUI
-    m_windowPtr->update();
-    float dt = m_windowPtr->deltaTime.asSeconds();
-    gui.update(m_windowPtr, m_windowPtr->deltaTime);
-
-    // 4. Resetear waypoints si se pidió
-    if (gui.shouldResetWaypoints()) {
-      m_currentWaypointIndex = 0;
-    }
-
-    // 5. Lógica de movimiento de Mario (si no está en pausa)
-    if (!gui.isPaused() && !m_circleActor.isNull()) {
-      if (auto xf = m_circleActor->getComponent<Transform>()) {
-        auto target = m_waypoints[m_currentWaypointIndex];
-        auto pos = xf->getPosition();
-        float dx = target.x - pos.x;
-        float dy = target.y - pos.y;
-        float dist = std::sqrt(dx * dx + dy * dy);
-        if (dist < 10.f) {
-          if (++m_currentWaypointIndex >= static_cast<int>(m_waypoints.size()))
-            m_currentWaypointIndex = 0;
-        }
-        float baseSpeed = 200.f;
-        xf->seek(target, baseSpeed * gui.getSpeedMultiplier(), dt, 10.f);
-      }
-      m_circleActor->update(dt);
-    }
-
-    // 6. Actualizar pista si aplica
-    if (!m_trackActor.isNull()) {
-      m_trackActor->update(dt);
-    }
-
-    // 7. Renderizado
+    // === Render ===
     m_windowPtr->clear(sf::Color::Black);
 
-    if (!m_trackActor.isNull()) m_trackActor->render(m_windowPtr);
-    if (!m_circleActor.isNull()) m_circleActor->render(m_windowPtr);
-
-    // Panel adicional con info de Mario
-    ImGui::Begin("Mario Info", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-    if (auto xf = m_circleActor->getComponent<Transform>()) {
-      auto pos = xf->getPosition();
-      ImGui::Text("Position: %.1f, %.1f", pos.x, pos.y);
+    if (!m_trackActor.isNull()) {
+      m_trackActor->render(m_windowPtr);
     }
-    ImGui::Text("Current waypoint: %d", m_currentWaypointIndex);
-    ImGui::End();
+
+    for (auto& racer : m_racers) {
+      if (racer) {
+        racer->render(m_windowPtr);
+      }
+    }
 
     gui.render(m_windowPtr);
     m_windowPtr->display();
@@ -95,17 +96,17 @@ int BaseApp::run() {
 }
 
 bool BaseApp::init() {
-  // 1) Crear ventana
+  // 1) Ventana
   m_windowPtr = EngineUtilities::MakeShared<Window>(1920, 1080, "VectonautaEngine");
   if (!m_windowPtr) {
     ERROR("BaseApp", "init", "Failed to create window", "Check memory allocation");
     return false;
   }
 
-  // 2) Inicializar GUI
+  // 2) GUI
   gui.init(m_windowPtr);
 
-  // 3) Cargar textura y crear actor de la pista (fondo)
+  // 3) Fondo / pista
   if (!resourceMan.loadTexture("Sprites/Track", "png")) {
     MESSAGE("BaseApp", "init", "Cannot load Track.png");
   }
@@ -139,57 +140,54 @@ bool BaseApp::init() {
     xf->setPosition({ 0.f, 0.f });
   }
 
-  // 4) Crear y configurar actor de Mario
-  m_circleActor = EngineUtilities::MakeShared<Actor>("Mario Actor");
-  if (m_circleActor.isNull()) {
-    ERROR("BaseApp", "init", "Failed to create Mario actor", "");
-    return false;
-  }
+  // 4) Definir ruta de la pista
+  m_path = {
+    {100.f, 150.f}, {300.f, 140.f}, {500.f, 160.f}, {700.f, 300.f},
+    {900.f, 280.f}, {1100.f, 500.f}, {1300.f, 480.f}, {1500.f, 450.f}
+    // agrégale más puntos para que siga mejor tu pista real
+  };
 
-  if (auto shape = m_circleActor->getComponent<CShape>()) {
-    shape->createShape(ShapeType::CIRCLE);
-    shape->setFillColor(sf::Color::White);
-  }
-  else {
-    ERROR("BaseApp", "init", "Mario actor missing CShape");
-    return false;
-  }
+  // 5) Crear racers
+  m_racers.clear();
+  auto racer1 = EngineUtilities::MakeShared<A_Racer>("Racer 1", 1);
+  auto racer2 = EngineUtilities::MakeShared<A_Racer>("Racer 2", 2);
 
-  if (auto xf = m_circleActor->getComponent<Transform>()) {
-    xf->setPosition({ 100.f, 150.f });
-    xf->setScale({ 3.f, 3.f });
-  }
+  racer1->setPath(m_path);
+  racer2->setPath(m_path);
+
+  if (auto xf1 = racer1->getComponent<Transform>()) xf1->setPosition(m_path[0]);
+  if (auto xf2 = racer2->getComponent<Transform>()) xf2->setPosition(m_path[0] + sf::Vector2f(0.f, 30.f));
 
   if (!resourceMan.loadTexture("Sprites/Mario", "png")) {
     MESSAGE("BaseApp", "init", "Cannot load Mario.png");
   }
   auto marioTex = resourceMan.getTexture("Sprites/Mario");
-  if (marioTex.isNull()) {
-    ERROR("BaseApp", "init", "Mario texture null");
-    return false;
+  if (!marioTex.isNull()) {
+    racer1->setTexture(marioTex);
+    racer2->setTexture(marioTex);
   }
-  m_circleActor->setTexture(marioTex);
 
-  // Waypoints para movimiento
-  m_waypoints = {
-    {400.f, 150.f},
-    {700.f, 300.f},
-    {1000.f, 150.f},
-    {1200.f, 500.f}
-  };
-  m_currentWaypointIndex = 0;
+  m_racers.push_back(racer1);
+  m_racers.push_back(racer2);
+
+  // 6) Línea de meta (ajústala a tu pista)
+  m_finishLine = sf::FloatRect(sf::Vector2f(1800.f, 500.f), sf::Vector2f(50.f, 200.f));
+
+
+  // 7) Inicializar GUI con racers
+  gui.setRacers(m_racers);
 
   return true;
 }
 
 void BaseApp::update() {
-  // Lógica se maneja dentro de run()
+  // lógica integrada en run()
 }
 
 void BaseApp::render() {
-  // Render dentro de run()
+  // ya se hace en run()
 }
 
 void BaseApp::destroy() {
-  // Limpieza adicional si hace falta
+  // limpieza extra si aplica
 }

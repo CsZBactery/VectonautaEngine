@@ -173,6 +173,7 @@
     <ClCompile Include="..\ThirdParties\imgui-master\imgui_tables.cpp" />
     <ClCompile Include="..\ThirdParties\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="..\ThirdParties\imgui-sfml-master\imgui-SFML.cpp" />
+    <ClCompile Include="src\A_Racer.cpp" />
     <ClCompile Include="src\BaseApp.cpp" />
     <ClCompile Include="src\CShape.cpp" />
     <ClCompile Include="src\ECS\Actor.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imconfig-SFML.h" />
     <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imgui-SFML.h" />
     <ClInclude Include="..\ThirdParties\imgui-sfml-3.0\imgui-SFML_export.h" />
+    <ClInclude Include="include\A_Racer.h" />
     <ClInclude Include="include\BaseApp.h" />
     <ClInclude Include="include\CShape.h" />
     <ClInclude Include="include\ECS\Actor.h" />

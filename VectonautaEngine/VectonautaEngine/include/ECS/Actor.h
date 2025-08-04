@@ -1,91 +1,66 @@
 #pragma once
+
+#include <string>
+#include <vector>
+#include <type_traits>
+
 #include "Prerequisites.h"
-#include <ECS/Entity.h>
-#include <CShape.h>
-#include <ECS/Transform.h>
-#include <ECS/Texture.h>
+#include "Memory/TSharedPointer.h"
+#include "ECS/Component.h"
+#include "CShape.h"
+#include "ECS/Transform.h"
+#include "ECS/Texture.h"
 
 class Window;
+
 /**
- * @class Actor
- * @brief Representa una entidad activa del mundo del juego que puede tener componentes, ser actualizada, renderizada y destruida.
- * Hereda de Entity.
+ * @brief Actor básico que contiene componentes y puede representarse en el mundo.
  */
-class
-  Actor : public Entity {
+class Actor {
 public:
-  /**
-   * @brief Constructor por defecto del Actor.
-   */
-  Actor() = default;
+  explicit Actor(const std::string& name)
+    : m_name(name)
+  {
+    // Componentes base por defecto: shape y transform
+    addComponent(EngineUtilities::MakeShared<CShape>());
+    addComponent(EngineUtilities::MakeShared<Transform>());
+  }
 
-  /**
-   * @brief Constructor que inicializa el Actor con un nombre.
-   * @param actorName Nombre a asignar al actor.
-   */
-  Actor(const std::string& actorName);
+  virtual ~Actor() = default;
 
-  /**
-   * @brief Destructor virtual por defecto del Actor.
-   */
-  virtual
-    ~Actor() = default;
+  virtual void start() {}
+  virtual void update(float deltaTime);
+  virtual void render(const EngineUtilities::TSharedPointer<Window>& window);
+  virtual void destroy() {}
 
-  /**
-   * @brief Método que se llama al iniciar el Actor. Puede usarse para inicializar componentes.
-   */
-  void
-    start() override;
+  const std::string& getName() const { return m_name; }
+  void setName(const std::string& n) { m_name = n; }
 
-  /**
-   * @brief Método que se llama cada frame para actualizar el estado del Actor.
-   * @param deltaTime Tiempo transcurrido desde la última actualización.
-   */
-  void
-    update(float deltaTime) override;
+  void setPlayerId(int id) { m_playerId = id; }
+  int getPlayerId() const { return m_playerId; }
 
-  /**
-   * @brief Renderiza el Actor en la ventana proporcionada.
-   * @param window Referencia compartida a la ventana donde se renderiza el actor.
-   */
-  void
-    render(const EngineUtilities::TSharedPointer<Window>& window) override;
+  template<typename T>
+  EngineUtilities::TSharedPointer<T> getComponent() const {
+    for (const auto& comp : components) {
+      if (auto casted = comp.template dynamic_pointer_cast<T>()) {
+        return casted;
+      }
+    }
+    return EngineUtilities::TSharedPointer<T>();
+  }
 
-  /**
-   * @brief Método que se llama para destruir el Actor y limpiar sus recursos.
-   */
-  void
-    destroy() override;
+  template<typename T>
+  void addComponent(const EngineUtilities::TSharedPointer<T>& component) {
+    static_assert(std::is_base_of<Component, T>::value,
+      "addComponent<T> sólo acepta Component derivados");
+    EngineUtilities::TSharedPointer<Component> baseComp = component;
+    components.push_back(baseComp);
+  }
 
-  /**
-   * @brief Obtiene un componente del tipo especificado si existe en el Actor.
-   * @tparam T Tipo del componente a buscar.
-   * @return Referencia compartida al componente del tipo T si se encuentra; nullptr en caso contrario.
-   */
-  template <typename T>
-  EngineUtilities::TSharedPointer<T> getComponent();
-
-  void
-    setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
+  void setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
 
 private:
-  /**
-   * @brief Nombre del actor.
-   */
-  std::string m_name = "Actor";
-
+  std::string m_name;
+  std::vector<EngineUtilities::TSharedPointer<Component>> components;
+  int m_playerId = 0;
 };
-
-/**
- * @brief Implementación de la plantilla getComponent.
- * @tparam T Tipo del componente a buscar.
- * @return Referencia compartida al componente del tipo T si se encuentra; nullptr en caso contrario.
- */
-template <typename T>
-inline EngineUtilities::TSharedPointer<T> Actor::getComponent() {
-  for (auto& component : components) {
-    auto specific = component.template dynamic_pointer_cast<T>();
-    if (specific) return specific;
-  }
-  return {};
-}
