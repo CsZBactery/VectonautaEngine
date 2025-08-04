@@ -1,37 +1,61 @@
-#include <Prerequisites.h>
-#include <BaseApp.h>
-#include <ResourceManager.h>
-#include <ECS/Actor.h>
-#include <ECS/Transform.h>
-#include <CShape.h>
-#include <cmath>  
-
-
-
-/**
- * @file BaseApp.cpp
- * @brief Implements the BaseApp class which manages the main application loop.
- */
+#include "BaseApp.h"
+#include "Prerequisites.h"
+#include "Window.h"
+#include "EngineGUI.h"
+#include "CShape.h"
+#include "ECS/Transform.h"
+#include "ECS/Actor.h"
+#include <cmath>
+#include <iostream>
 
 BaseApp::~BaseApp() {}
 
-// Ejecuta el ciclo principal
 int BaseApp::run() {
   if (!init()) {
     ERROR("BaseApp", "run", "Initialization failed", "Check init() logic");
+    return -1;
   }
 
   while (m_windowPtr->isOpen()) {
-    m_windowPtr->handleEvents();
-    update();
-    render();
+    // 1. Eventos: pasar cada evento al GUI y manejar cierre
+    m_windowPtr->handleEvents([&](const sf::Event& event) {
+      // Procesar evento para ImGui-SFML (ahora con ventana + evento)
+      ImGui::SFML::ProcessEvent(m_windowPtr->getInternal(), event);
+
+      if (event.is<sf::Event::Closed>()) {
+        m_windowPtr->close();
+      }
+      });
+
+
+    // 2. Actualizar tiempo
+    m_windowPtr->update();
+    float dt = m_windowPtr->deltaTime.asSeconds();
+
+    if (!m_trackActor.isNull()) m_trackActor->update(dt);
+    if (!m_circleActor.isNull()) m_circleActor->update(dt);
+
+    gui.update(m_windowPtr, m_windowPtr->deltaTime);
+
+    if (gui.shouldQuit()) {
+      m_windowPtr->close();
+    }
+
+    // 3. Renderizado
+    m_windowPtr->clear(sf::Color::Black);
+
+    if (!m_trackActor.isNull()) m_trackActor->render(m_windowPtr);
+    if (!m_circleActor.isNull()) m_circleActor->render(m_windowPtr);
+
+    gui.render(m_windowPtr);
+
+    m_windowPtr->display();
   }
 
   destroy();
   return 0;
 }
 
-// Inicializa la ventana y los actores
 bool BaseApp::init() {
   // 1) Crear ventana
   m_windowPtr = EngineUtilities::MakeShared<Window>(1920, 1080, "VectonautaEngine");
@@ -40,110 +64,95 @@ bool BaseApp::init() {
     return false;
   }
 
-  // 2) Cargar textura y crear actor de la pista
+  // 2) Inicializar GUI
+  gui.init(m_windowPtr);
+
+  // 3) Cargar textura y crear actor de la pista (fondo)
   if (!resourceMan.loadTexture("Sprites/Track", "png")) {
     MESSAGE("BaseApp", "init", "Cannot load Track.png");
   }
   auto trackTex = resourceMan.getTexture("Sprites/Track");
+  if (trackTex.isNull()) {
+    ERROR("BaseApp", "init", "Track texture null");
+    return false;
+  }
 
   m_trackActor = EngineUtilities::MakeShared<Actor>("Track");
   if (auto shape = m_trackActor->getComponent<CShape>()) {
-    // Creamos un RECTANGLE y lo preparamos
     shape->createShape(ShapeType::RECTANGLE);
     shape->setFillColor(sf::Color::White);
 
-    // Ajustamos el tamaño del rectángulo al de la textura
+    // Ajustar tamaño para cubrir la ventana
     auto texSize = trackTex->getTexture().getSize();
     if (auto rect = dynamic_cast<sf::RectangleShape*>(shape->getShape())) {
-      rect->setSize({ float(texSize.x), float(texSize.y) });
-      rect->setOrigin(0.f, 0.f);
+      rect->setSize({ static_cast<float>(texSize.x), static_cast<float>(texSize.y) });
+      rect->setOrigin({ 0.f, 0.f });
     }
 
-    // Lo escalamos para cubrir toda la ventana (1920×1080)
-    float scaleX = 1920.f / float(texSize.x);
-    float scaleY = 1080.f / float(texSize.y);
+    float scaleX = 1920.f / static_cast<float>(texSize.x);
+    float scaleY = 1080.f / static_cast<float>(texSize.y);
     shape->setScale({ scaleX, scaleY });
+  }
+  else {
+    ERROR("BaseApp", "init", "Failed to get CShape from track actor");
+    return false;
   }
   m_trackActor->setTexture(trackTex);
   if (auto xf = m_trackActor->getComponent<Transform>()) {
     xf->setPosition({ 0.f, 0.f });
   }
 
-  // 3) Crear y configurar actor de Mario
+  // 4) Crear y configurar actor de Mario
   m_circleActor = EngineUtilities::MakeShared<Actor>("Mario Actor");
-  if (m_circleActor) {
-    if (auto shape = m_circleActor->getComponent<CShape>()) {
-      shape->createShape(ShapeType::CIRCLE);
-      shape->setFillColor(sf::Color::White);
-    }
-    if (auto xf = m_circleActor->getComponent<Transform>()) {
-      xf->setPosition({ 100.f, 150.f });
-      xf->setScale({ 3.f, 3.f });
-    }
-    if (!resourceMan.loadTexture("Sprites/Mario", "png")) {
-      MESSAGE("BaseApp", "init", "Cannot load Mario.png");
-    }
-    m_circleActor->setTexture(resourceMan.getTexture("Sprites/Mario"));
-
-    // Waypoints para movimiento
-    m_waypoints = {
-        {400.f, 150.f},
-        {700.f, 300.f},
-        {1000.f, 150.f},
-        {1200.f, 500.f}
-    };
-    m_currentWaypointIndex = 0;
-  }
-  else {
+  if (m_circleActor.isNull()) {
     ERROR("BaseApp", "init", "Failed to create Mario actor", "");
     return false;
   }
 
+  if (auto shape = m_circleActor->getComponent<CShape>()) {
+    shape->createShape(ShapeType::CIRCLE);
+    shape->setFillColor(sf::Color::White);
+  }
+  else {
+    ERROR("BaseApp", "init", "Mario actor missing CShape");
+    return false;
+  }
+
+  if (auto xf = m_circleActor->getComponent<Transform>()) {
+    xf->setPosition({ 100.f, 150.f });
+    xf->setScale({ 3.f, 3.f });
+  }
+
+  if (!resourceMan.loadTexture("Sprites/Mario", "png")) {
+    MESSAGE("BaseApp", "init", "Cannot load Mario.png");
+  }
+  auto marioTex = resourceMan.getTexture("Sprites/Mario");
+  if (marioTex.isNull()) {
+    ERROR("BaseApp", "init", "Mario texture null");
+    return false;
+  }
+  m_circleActor->setTexture(marioTex);
+
+  // Waypoints para movimiento
+  m_waypoints = {
+    {400.f, 150.f},
+    {700.f, 300.f},
+    {1000.f, 150.f},
+    {1200.f, 500.f}
+  };
+  m_currentWaypointIndex = 0;
+
   return true;
 }
 
-// Actualiza la lógica de la aplicación cada frame
 void BaseApp::update() {
-  float dt = m_windowPtr->deltaTime.asSeconds();
-  m_windowPtr->update();
-
-  if (!m_trackActor.isNull()) {
-    m_trackActor->update(dt);
-  }
-
-  if (!m_circleActor.isNull() && !m_waypoints.empty()) {
-    m_circleActor->update(dt);
-
-    auto xf = m_circleActor->getComponent<Transform>();
-    auto target = m_waypoints[m_currentWaypointIndex];
-    auto pos = xf->getPosition();
-
-    float dx = target.x - pos.x;
-    float dy = target.y - pos.y;
-    float dist = std::sqrt(dx * dx + dy * dy);
-
-    if (dist < 10.f) {
-      if (++m_currentWaypointIndex >= static_cast<int>(m_waypoints.size()))
-        m_currentWaypointIndex = 0;
-    }
-    xf->seek(target, 200.f, dt, 10.f);
-  }
+  // Lógica específica ya se maneja en run()
 }
 
-// Renderiza la pista y los actores
 void BaseApp::render() {
-  m_windowPtr->clear();
-
-  if (!m_trackActor.isNull())
-    m_trackActor->render(m_windowPtr);
-
-  if (!m_circleActor.isNull())
-    m_circleActor->render(m_windowPtr);
-
-  m_windowPtr->display();
+  // Render ya integrado en run()
 }
 
-// Limpia recursos (los smart pointers liberan automáticamente)
 void BaseApp::destroy() {
-  // Nothing to explicitly delete
+  // Limpieza adicional si se necesitara; smart pointers se encargan del resto
 }

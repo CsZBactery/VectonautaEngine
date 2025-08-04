@@ -1,6 +1,7 @@
 #include "Prerequisites.h"
 #include "Window.h"
 #include <SFML/Graphics.hpp>
+#include <functional> // por si no viene transitivamente
 
 /**
  * @file Window.cpp
@@ -8,14 +9,13 @@
  */
 
 Window::Window(int width, int height, const std::string& title) {
-  // Creamos el TUniquePtr correctamente
+  // Crear la ventana usando SFML 3: VideoMode toma sf::Vector2u explícito
   m_windowPtr = EngineUtilities::MakeUnique<sf::RenderWindow>(
-    sf::VideoMode(width, height),
+    sf::VideoMode(sf::Vector2u(static_cast<unsigned>(width), static_cast<unsigned>(height))),
     title
   );
 
-  // Ahora sí podemos usarlo sin problemas
-  if (m_windowPtr->isOpen()) {
+  if (m_windowPtr && m_windowPtr->isOpen()) {
     m_windowPtr->setFramerateLimit(60);
     MESSAGE("Window", "Window", "Created successfully");
   }
@@ -28,16 +28,30 @@ Window::~Window() {
   destroy();
 }
 
-void Window::handleEvents() {
-  if (!m_windowPtr) {
-    ERROR("Window", "handleEvents", "Window is null");
-    return;
-  }
-  sf::Event event;
-  while (m_windowPtr->pollEvent(event)) {
-    if (event.type == sf::Event::Closed) {
-      m_windowPtr->close();
+void Window::handleEvents(const std::function<void(const sf::Event&)>& callback) {
+  if (!m_windowPtr) return;
+
+  // SFML 3: pollEvent devuelve std::optional<sf::Event>
+  while (auto event = m_windowPtr->pollEvent()) {
+    // Pasar evento al callback (por ejemplo GUI)
+    if (callback) callback(*event);
+
+    // Cerrar con el evento de ventana
+    if (event->is<sf::Event::Closed>()) {
+      close();
     }
+    // Escapar con Escape
+    else if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
+      if (static_cast<int>(key->scancode) == static_cast<int>(sf::Keyboard::Scancode::Escape)) {
+        close();
+      }
+    }
+  }
+}
+
+void Window::close() {
+  if (m_windowPtr && m_windowPtr->isOpen()) {
+    m_windowPtr->close();
   }
 }
 

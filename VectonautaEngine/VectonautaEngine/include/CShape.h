@@ -5,13 +5,14 @@
  * @brief Declares the CShape class used to represent 2D shapes as components in the ECS system.
  */
 
+#include <SFML/Graphics.hpp> // Incluye sf::Shape, sf::Vector2f, sf::Color, etc.
 #include <Prerequisites.h>
 #include <Memory/TSharedPointer.h>
 #include <Memory/TUniquePtr.h>
 #include <ECS/Component.h>
 #include <ECS/Texture.h>
 
-  class Window;
+class Window;
 
 /**
  * @class CShape
@@ -30,82 +31,71 @@ public:
    * @brief Constructs a CShape component with a specific shape type.
    * @param shapeType Type of the shape to initialize.
    */
-  CShape(ShapeType shapeType);
+  explicit CShape(ShapeType shapeType);
 
   /**
    * @brief Destructor.
    */
-  virtual
-    ~CShape() = default;
+  virtual ~CShape() = default;
 
   /**
    * @brief Initializes the component.
    */
-  void
-    start() override;
+  void start() override;
 
   /**
    * @brief Updates the shape logic.
    * @param deltaTime Time elapsed since last frame.
    */
-  void
-    update(float deltaTime) override;
+  void update(float deltaTime) override;
 
   /**
    * @brief Renders the shape on screen.
    * @param window Pointer to the rendering window.
    */
-  void
-    render(const EngineUtilities::TSharedPointer<Window>& window) override;
+  void render(const EngineUtilities::TSharedPointer<Window>& window) override;
 
   /**
    * @brief Cleans up the component resources.
    */
-  void
-    destroy() override;
+  void destroy() override;
 
   /**
    * @brief Creates a new shape based on the specified type.
    * @param shapeType Type of shape to create.
    */
-  void
-    createShape(ShapeType shapeType);
+  void createShape(ShapeType shapeType);
 
   /**
    * @brief Sets the shape position using coordinates.
    * @param x X coordinate.
    * @param y Y coordinate.
    */
-  void
-    setPosition(float x, float y);
+  void setPosition(float x, float y);
 
   /**
    * @brief Sets the shape position using a vector.
    * @param position SFML 2D vector.
    */
-  void
-    setPosition(const sf::Vector2f& position);
+  void setPosition(const sf::Vector2f& position);
 
   /**
    * @brief Sets the fill color of the shape.
    * @param color Color to apply.
    */
-  void
-    setFillColor(const sf::Color& color);
+  void setFillColor(const sf::Color& color);
 
   /**
    * @brief Sets the shape's rotation.
-   * @param angle Angle in degrees.
+   * @param angleDegrees Angle in degrees.
    */
-  void
-    setRotation(float angle);
+  void setRotation(float angleDegrees);
 
   /**
    * @brief Sets the scale of the shape.
    * @param scl Scale factor as a 2D vector.
    */
-  void
-    setScale(const sf::Vector2f& scl);
+  void setScale(const sf::Vector2f& scl);
 
   /**
    * @brief Returns the raw shape pointer (for low-level access).
@@ -113,8 +103,11 @@ public:
    */
   sf::Shape* getShape();
 
-  void 
-    setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
+  /**
+   * @brief Assigns a texture to the shape (if applicable).
+   * @param texture Textura gestionada.
+   */
+  void setTexture(const EngineUtilities::TSharedPointer<Texture>& texture);
 
 private:
   EngineUtilities::TSharedPointer<sf::Shape> m_shapePtr; ///< Smart pointer to the SFML shape.

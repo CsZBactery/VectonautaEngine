@@ -8,8 +8,10 @@
 #include "Prerequisites.h"       // Core utilities and SFML headers
 #include "ECS/Component.h"       // Base Component class
 #include "Window.h"              // Window for rendering
-#include <string>                 // std::string
-#include <iostream>               // std::cerr
+#include <string>                // std::string
+#include <iostream>              // std::cerr
+#include <optional>              // std::optional for sprite
+#include <SFML/Graphics.hpp>     // sf::Texture, sf::Sprite, sf::Color, etc.
 
 class Window;  // Forward declaration
 
@@ -25,17 +27,7 @@ public:
    * @param extension File extension (default: "png").
    */
   Texture(const std::string& textureName,
-    const std::string& extension = "png")
-    : Component(ComponentType::TEXTURE)
-    , m_textureName(textureName)
-    , m_extension(extension)
-  {
-    std::string path = m_textureName + "." + m_extension;
-    if (!m_texture.loadFromFile(path)) {
-      std::cerr << "Error loading texture: " << path << std::endl;
-    }
-    m_sprite.setTexture(m_texture);
-  }
+    const std::string& extension = "png");
 
   ~Texture() override = default;
 
@@ -45,11 +37,7 @@ public:
   /**
    * @brief Draws the sprite to the given window.
    */
-  void render(const EngineUtilities::TSharedPointer<Window>& window) override {
-    if (window) {
-      window->draw(m_sprite);
-    }
-  }
+  void render(const EngineUtilities::TSharedPointer<Window>& window) override;
 
   void destroy() override {}
 
@@ -59,8 +47,8 @@ public:
   sf::Texture& getTexture() { return m_texture; }
 
 private:
-  sf::Texture   m_texture;      ///< SFML texture resource
-  sf::Sprite    m_sprite;       ///< Sprite for rendering the texture
-  std::string   m_textureName;  ///< Filename (without extension)
-  std::string   m_extension;    ///< File extension used
+  sf::Texture              m_texture;      ///< SFML texture resource
+  std::optional<sf::Sprite> m_sprite;      ///< Sprite for rendering the texture
+  std::string              m_textureName;  ///< Filename (without extension)
+  std::string              m_extension;    ///< File extension used
 };

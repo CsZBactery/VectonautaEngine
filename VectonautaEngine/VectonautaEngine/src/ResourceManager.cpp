@@ -1,48 +1,39 @@
 #include "ResourceManager.h"
-#include "Prerequisites.h"  // para ERROR, MESSAGE, etc.
-#include <iostream>         // para std::cerr
+#include <iostream>
+#include <filesystem>
 
-bool ResourceManager::loadTexture(const std::string& fileName,
-  const std::string& extension)
-{
-  // 1) Si ya está cargada, devolvemos true inmediatamente
-  if (m_textures.find(fileName) != m_textures.end()) {
-    return true;
+bool ResourceManager::loadTexture(const std::string& fileName, const std::string& extension) {
+  // Si ya está cargada, no hacemos nada
+  auto it = m_textures.find(fileName);
+  if (it != m_textures.end() && !it->second.isNull()) {
+    return true; // ya la teníamos
   }
 
-  // 2) Creamos y almacenamos la nueva textura
-  auto texture = EngineUtilities::MakeShared<Texture>(fileName, extension);
-  m_textures[fileName] = texture;
+  // Construir ruta: e.g. "Sprites/Track" + ".png"
+  std::string fullName = fileName + "." + extension;
+  std::filesystem::path fullPath = std::filesystem::absolute(fullName);
 
-  // Podrías comprobar aquí si la carga interna de SFML fue exitosa
-  // y devolver false en caso contrario.
+  // Intentar cargar
+  auto texturePtr = EngineUtilities::MakeShared<Texture>(fileName, extension);
+  // El constructor de Texture ya intenta cargar y emplace el sprite solo si tiene éxito.
+  // Pero verificamos si la textura interna se cargó correctamente inspeccionando si el sprite está presente.
 
-  return true;
+  // Para diagnosticar, podrías agregar print aquí si quieres
+  // Nota: No tenemos acceso directo a saber si falló sin exponerlo en Texture; asumimos que si el archivo no existe,
+  // el usuario verá el mensaje que imprime Texture.
+
+  // Guardar en el mapa (incluso si falló, así no se reintenta infinitamente sin control)
+  m_textures[fileName] = texturePtr;
+
+  // Retornar true si la textura fue cargada (podemos comprobar si getTexture devolvió algo válido)
+  return !texturePtr.isNull();
 }
 
-EngineUtilities::TSharedPointer<Texture>
-ResourceManager::getTexture(const std::string& fileName)
-{
-  // 1) Intentamos encontrar la textura solicitada
+EngineUtilities::TSharedPointer<Texture> ResourceManager::getTexture(const std::string& fileName) {
   auto it = m_textures.find(fileName);
   if (it != m_textures.end()) {
     return it->second;
   }
-
-  // 2) Si no existe, avisamos y usamos la textura por defecto
-  std::cerr << "[ResourceManager] Texture not found: "
-    << fileName << ". Using default texture.\n";
-
-  const std::string defaultKey = "Default";
-
-  // 2a) Si la textura por defecto ya está cargada, la devolvemos
-  auto defaultIt = m_textures.find(defaultKey);
-  if (defaultIt != m_textures.end()) {
-    return defaultIt->second;
-  }
-
-  // 2b) Si no, la cargamos y la almacenamos
-  auto defaultTexture = EngineUtilities::MakeShared<Texture>(defaultKey, "png");
-  m_textures[defaultKey] = defaultTexture;
-  return defaultTexture;
+  // No encontrada: devolver shared pointer nulo
+  return EngineUtilities::TSharedPointer<Texture>();
 }

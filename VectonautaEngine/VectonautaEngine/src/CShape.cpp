@@ -4,19 +4,13 @@
 #include "Memory/TUniquePtr.h"
 #include "Memory/TSharedPointer.h"
 #include <ECS/Texture.h>
+#include <SFML/Graphics.hpp> // por si no está transitivamente incluido
+
 /**
  * @file CShape.cpp
  * @brief Implementation of the CShape class for creating and manipulating different SFML shapes.
  */
 
- /**
-  * @brief Creates a shape of the specified type.
-  *
-  * Allocates and configures a shape (Circle, Rectangle, Triangle, or Polygon) based on the given shape type.
-  * The shape is stored internally using a shared pointer.
-  *
-  * @param shapeType The type of shape to create.
-  */
 void CShape::createShape(ShapeType shapeType) {
   m_shapeType = shapeType;
 
@@ -24,13 +18,14 @@ void CShape::createShape(ShapeType shapeType) {
   case ShapeType::CIRCLE: {
     auto circleSP = EngineUtilities::MakeShared<sf::CircleShape>(10.f);
     circleSP->setFillColor(sf::Color::Green);
-    // Basta con asignar; la conversión de puntero derivado?base la hace el TSharedPointer
+    circleSP->setOrigin({ 10.f, 10.f }); // centrar el origen si se desea
     m_shapePtr = circleSP;
     break;
   }
   case ShapeType::RECTANGLE: {
     auto rectangleSP = EngineUtilities::MakeShared<sf::RectangleShape>(sf::Vector2f(100.f, 50.f));
     rectangleSP->setFillColor(sf::Color::White);
+    rectangleSP->setOrigin({ 50.f, 25.f });
     m_shapePtr = rectangleSP;
     break;
   }
@@ -40,6 +35,8 @@ void CShape::createShape(ShapeType shapeType) {
     triangleSP->setPoint(1, sf::Vector2f(50.f, 100.f));
     triangleSP->setPoint(2, sf::Vector2f(100.f, 0.f));
     triangleSP->setFillColor(sf::Color::Blue);
+    // opcional: centrar origen si necesitas rotar alrededor de centro
+    triangleSP->setOrigin({ 50.f, 50.f });
     m_shapePtr = triangleSP;
     break;
   }
@@ -51,16 +48,18 @@ void CShape::createShape(ShapeType shapeType) {
     polygonSP->setPoint(3, sf::Vector2f(75.f, -50.f));
     polygonSP->setPoint(4, sf::Vector2f(-25.f, -50.f));
     polygonSP->setFillColor(sf::Color::Red);
+    polygonSP->setOrigin({ 50.f, 25.f }); // ejemplo
     m_shapePtr = polygonSP;
     break;
   }
   default:
-    m_shapePtr.reset();
+    if (m_shapePtr) {
+      m_shapePtr.reset(); // asumir que tiene reset semántico
+    }
     ERROR("CShape", "createShape", "Unknown shape type");
     return;
   }
 }
-
 
 CShape::CShape()
   : Component(ComponentType::SHAPE),
@@ -75,31 +74,26 @@ CShape::CShape(ShapeType shapeType)
   createShape(shapeType);
 }
 
-
-void
-CShape::start() {
-  // Tu lógica aquí
+void CShape::start() {
+  // Inicialización si hace falta
 }
 
-void
-CShape::update(float deltaTime) {
-  // Future logic for animation or state change
+void CShape::update(float deltaTime) {
+  // Lógica futura
 }
 
-void
-CShape::destroy() {
-
+void CShape::destroy() {
+  // Limpieza si aplica (por ejemplo, soltar recursos si no lo hace el smart pointer)
 }
 
+void CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
+  if (!window) {
+    ERROR("CShape", "render", "Window inválida.");
+    return;
+  }
 
-/**
- * @brief Renders the shape using the given window.
- *
- * @param window Shared pointer to the window object.
- */
-void
-CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
   if (m_shapePtr) {
+    // Se asume que Window expone draw(a) de forma compatible con sf::Drawable
     window->draw(*m_shapePtr);
   }
   else {
@@ -107,29 +101,16 @@ CShape::render(const EngineUtilities::TSharedPointer<Window>& window) {
   }
 }
 
-/**
- * @brief Sets the position of the shape.
- *
- * @param x X coordinate.
- * @param y Y coordinate.
- */
-void
-CShape::setPosition(float x, float y) {
+void CShape::setPosition(float x, float y) {
   if (m_shapePtr) {
-    m_shapePtr->setPosition(x, y);
+    m_shapePtr->setPosition({ x, y });
   }
   else {
     ERROR("CShape", "setPosition", "Shape is not initialized.");
   }
 }
 
-/**
- * @brief Sets the position of the shape using a vector.
- *
- * @param position The position as a 2D vector.
- */
-void
-CShape::setPosition(const sf::Vector2f& position) {
+void CShape::setPosition(const sf::Vector2f& position) {
   if (m_shapePtr) {
     m_shapePtr->setPosition(position);
   }
@@ -138,13 +119,7 @@ CShape::setPosition(const sf::Vector2f& position) {
   }
 }
 
-/**
- * @brief Sets the fill color of the shape.
- *
- * @param color The color to apply.
- */
-void
-CShape::setFillColor(const sf::Color& color) {
+void CShape::setFillColor(const sf::Color& color) {
   if (m_shapePtr) {
     m_shapePtr->setFillColor(color);
   }
@@ -153,29 +128,16 @@ CShape::setFillColor(const sf::Color& color) {
   }
 }
 
-/**
- * @brief Sets the rotation angle of the shape.
- *
- * @param angle The rotation angle in degrees.
- */
-void
-CShape::setRotation(float angle)
-{
+void CShape::setRotation(float angle) {
   if (m_shapePtr) {
-    m_shapePtr->setRotation(angle);
+    m_shapePtr->setRotation(sf::degrees(angle)); // SFML 3 requiere sf::Angle
   }
   else {
     ERROR("CShape", "setRotation", "Shape is not initialized.");
   }
 }
 
-/**
- * @brief Sets the scale of the shape.
- *
- * @param scale The scaling factor as a 2D vector.
- */
-void
-CShape::setScale(const sf::Vector2f& scale) {
+void CShape::setScale(const sf::Vector2f& scale) {
   if (m_shapePtr) {
     m_shapePtr->setScale(scale);
   }
@@ -184,15 +146,12 @@ CShape::setScale(const sf::Vector2f& scale) {
   }
 }
 
-sf::Shape* CShape::getShape()
-{
-  return m_shapePtr.get();
+sf::Shape* CShape::getShape() {
+  return m_shapePtr ? m_shapePtr.get() : nullptr;
 }
 
-void
-CShape::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
-  if (m_shapePtr.get() && texture && !texture.isNull()) {
-    // sf::Shape::setTexture recibe puntero a sf::Texture
+void CShape::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
+  if (m_shapePtr && texture) {
     m_shapePtr->setTexture(&texture->getTexture());
   }
 }
