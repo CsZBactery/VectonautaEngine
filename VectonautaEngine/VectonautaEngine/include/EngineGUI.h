@@ -20,12 +20,25 @@ public:
 
   void setupGreyGUIStyle();
   void setupDarkGUIStyle();
-  void renderMenuBar();
 
-  void processEvent(const sf::Event& event);
+  // Ahora recibe ventana también
+  void processEvent(const EngineUtilities::TSharedPointer<Window>& window, const sf::Event& event);
 
+  // Flags / estados expuestos
   bool shouldQuit() const { return m_requestQuit; }
+  bool isPaused() const { return m_paused; }
+  bool shouldResetWaypoints(); // consume el flag y lo resetea
+  float getSpeedMultiplier() const { return m_speedMultiplier; }
+
+  // Auxiliares
+  void togglePause() { m_paused = !m_paused; }
 
 private:
-  bool m_requestQuit = false; // Se pone true si el usuario pide salir desde el menú
+  void renderMenuBar();
+  void renderControlPanel(); // panel flotante
+
+  bool m_requestQuit = false;
+  bool m_paused = false;
+  bool m_requestReset = false;
+  float m_speedMultiplier = 1.0f; // multiplicador de velocidad
 };

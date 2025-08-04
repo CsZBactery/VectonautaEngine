@@ -9,9 +9,12 @@ void EngineGUI::init(const EngineUtilities::TSharedPointer<Window>& window) {
 void EngineGUI::update(const EngineUtilities::TSharedPointer<Window>& window, sf::Time deltaTime) {
   ImGui::SFML::Update(window->getInternal(), deltaTime);
   renderMenuBar();
+  renderControlPanel();
 
   ImGui::Begin("Stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration);
   ImGui::Text("FPS: %.1f", 1.0f / deltaTime.asSeconds());
+  ImGui::Text("Paused: %s", m_paused ? "Yes" : "No");
+  ImGui::Text("Speed x%.2f", m_speedMultiplier);
   ImGui::End();
 }
 
@@ -31,6 +34,18 @@ void EngineGUI::setupDarkGUIStyle() {
   ImGui::StyleColorsDark();
 }
 
+void EngineGUI::processEvent(const EngineUtilities::TSharedPointer<Window>& window, const sf::Event& event) {
+  ImGui::SFML::ProcessEvent(window->getInternal(), event);
+}
+
+bool EngineGUI::shouldResetWaypoints() {
+  if (m_requestReset) {
+    m_requestReset = false;
+    return true;
+  }
+  return false;
+}
+
 void EngineGUI::renderMenuBar() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
@@ -39,16 +54,35 @@ void EngineGUI::renderMenuBar() {
       }
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Game")) {
+      if (ImGui::MenuItem(m_paused ? "Resume" : "Pause")) {
+        m_paused = !m_paused;
+      }
+      if (ImGui::MenuItem("Reset Waypoints")) {
+        m_requestReset = true;
+      }
+      ImGui::Separator();
+      ImGui::Text("Speed:");
+      ImGui::SliderFloat("##speed", &m_speedMultiplier, 0.1f, 3.0f, "%.2f");
+      ImGui::EndMenu();
+    }
+
     ImGui::EndMainMenuBar();
   }
 }
 
-void EngineGUI::processEvent(const sf::Event& event) {
-  // Cambiado: pasamos también la ventana porque la versión de ImGui-SFML que tienes lo requiere
-  // Necesitas tener acceso a la ventana; aquí asumimos que se almacenó o se pasa de otra forma.
-  // Para mantener compatibilidad, podrías cambiar la firma para recibir el window también.
-  // Ejemplo de uso correcto en BaseApp::run:
-  // ImGui::SFML::ProcessEvent(window->getInternal(), event);
-  // Así que aquí simplemente no repites: delega fuera o adapta:
+void EngineGUI::renderControlPanel() {
+  ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+  if (ImGui::Button(m_paused ? "Resume" : "Pause")) {
+    m_paused = !m_paused;
+  }
+  if (ImGui::Button("Reset Waypoints")) {
+    m_requestReset = true;
+  }
+  ImGui::SliderFloat("Speed Multiplier", &m_speedMultiplier, 0.1f, 3.0f, "%.2f");
+  if (ImGui::Button("Exit")) {
+    m_requestQuit = true;
+  }
+  ImGui::End();
 }
-

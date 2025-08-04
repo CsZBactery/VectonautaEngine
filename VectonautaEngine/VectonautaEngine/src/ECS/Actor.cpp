@@ -26,9 +26,10 @@ void Actor::update(float deltaTime) {
   auto shape = getComponent<CShape>();
 
   if (transform && shape) {
-    shape->setPosition(transform->getPosition());
-    shape->setRotation(transform->getRotation().x);
-    shape->setScale(transform->getScale());
+    // Si quieres, aplica el transform directamente al sf::Shape interno
+    if (auto sfshape = shape->getShape()) {
+      transform->applyTo(*sfshape); // posición, rotación (convierte a sf::Angle), escala
+    }
   }
 }
 
@@ -41,8 +42,7 @@ void Actor::render(const EngineUtilities::TSharedPointer<Window>& window) {
   }
 }
 
-void
-Actor::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
+void Actor::setTexture(const EngineUtilities::TSharedPointer<Texture>& texture) {
   auto shape = getComponent<CShape>();
   if (shape) {
     if (!texture.isNull()) {
