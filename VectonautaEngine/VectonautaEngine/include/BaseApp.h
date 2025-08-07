@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Prerequisites.h"
+#include <Prerequisites.h>
 #include <ResourceManager.h>
 #include <Window.h>
 #include "EngineGUI.h"
@@ -12,29 +12,28 @@
 #include <vector>
 #include <SFML/System.hpp>
 
-/**
- * @brief Clase principal de la aplicación: inicializa, corre loop, actualiza y renderiza.
- */
 class BaseApp {
 public:
   BaseApp() = default;
   ~BaseApp();
 
-  int run();
+  int  run();
   bool init();
-  void update();
-  void render();
-  void destroy();
+  void update() {}
+  void render() {}
+  void destroy() {}
 
 private:
-  EngineUtilities::TSharedPointer<Window> m_windowPtr;
-  EngineUtilities::TSharedPointer<Actor> m_trackActor;
+  EngineUtilities::TSharedPointer<Window>           m_windowPtr;
+  EngineUtilities::TSharedPointer<Actor>            m_trackActor;
   std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;
   std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_finishedOrder;
 
-  ResourceManager resourceMan;
-  EngineGUI gui;
+  ResourceManager   resourceMan;
+  EngineGUI         gui;
 
   std::vector<sf::Vector2f> m_path;
-  sf::FloatRect m_finishLine = {}; // línea/meta
+  sf::FloatRect            m_finishLine;
+  float                     m_raceTimer = 0.f;
+  bool                      m_raceStarted = false;
 };

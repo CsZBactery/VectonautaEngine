@@ -2,18 +2,21 @@
 
 #include "ECS/Actor.h"
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/Rect.hpp>
 #include <vector>
 
 /**
- * @brief Racer NPC / jugador en la pista. Gestiona place y steering.
+ * @brief Racer NPC / jugador en la pista. Gestiona place, laps y steering.
  */
 class A_Racer : public Actor {
 public:
   explicit A_Racer(const std::string& name, int playerId = 0);
 
-  void start() override;
+  void start() override {}
   void update(float deltaTime) override;
-  void render(const EngineUtilities::TSharedPointer<Window>& window) override;
+  void render(const EngineUtilities::TSharedPointer<Window>& window) override {
+    Actor::render(window);
+  }
 
   // Path que sigue el racer (debe asignarse desde fuera)
   void setPath(const std::vector<sf::Vector2f>& pathPoints);
@@ -21,26 +24,37 @@ public:
   // Reinicia al inicio
   void reset();
 
-  // Getters / setters
-  int getPlace() const { return place; }
-  void setPlace(int p) { place = p; }
+  // Línea de meta
+  void setFinishLine(const sf::FloatRect& rect) { m_finishLine = rect; }
 
-  int getCurrentWaypointIndex() const { return currentWaypointIndex; }
-  void setSpeed(float s) { maxSpeed = s; }
-  float getSpeed() const { return maxSpeed; }
+  // Configuración de race
+  void setTotalLaps(int laps) { m_totalLaps = laps; }
+  int  getCurrentLap() const { return m_currentLap; }
+  int  getTotalLaps() const { return m_totalLaps; }
+  bool isFinished()  const { return m_currentLap >= m_totalLaps; }
 
-  // Obtener progreso relativo (0..1) en la pista para ranking visual
-  float getProgress() const;
+  // Getters / setters básicos
+  int  getPlace() const { return m_place; }
+  void setPlace(int p) { m_place = p; }
+  float getProgress() const;   // Normalizado 0..1
 
 private:
-  // Steering interno (path following)
   void doPathFollowing(float deltaTime);
 
-  std::vector<sf::Vector2f> path; // ruta completa
-  int currentWaypointIndex = 0;   // segmento actual
-  float lookaheadDistance = 50.f; // cuánto "mira" hacia adelante
-  float arriveRadius = 10.f;      // radio de llegada suavizada
-  float maxSpeed = 200.f;         // velocidad base
+  std::vector<sf::Vector2f> path;      ///< ruta completa
+  int currentWaypointIndex = 0;        ///< segmento actual
 
-  int place = 0; // 1 = primero, 2 = segundo, etc.
+  // Parámetros de steering
+  float lookaheadDistance = 50.f;
+  float arriveRadius = 10.f;
+  float m_maxSpeed = 200.f;
+
+  // Meta/laps
+  sf::FloatRect m_finishLine;
+  int    m_currentLap = 0;
+  int    m_totalLaps = 3;
+  bool   m_crossedLastFrame = false;
+
+  // Estado de carrera
+  int m_place = 0;  ///< posición final (1,2,3...)
 };
