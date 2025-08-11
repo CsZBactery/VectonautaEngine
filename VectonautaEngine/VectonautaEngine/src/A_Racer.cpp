@@ -20,21 +20,19 @@ A_Racer::A_Racer(const std::string& name, int /*playerId*/)
 void A_Racer::setPath(const std::vector<sf::Vector2f>& pathPoints) {
   path = pathPoints;
 
-  // Posición inicial en el primer punto
   if (!path.empty()) {
     if (auto xf = getComponent<Transform>()) {
       xf->setPosition(path.front());
       xf->setRotation(0.f);
     }
   }
-
-  // << FIX >> que evita el 99% al inicio:
-  // apuntemos al SEGUNDO waypoint como objetivo inicial
   currentWaypointIndex = (path.size() > 1 ? 1 : 0);
+
+  // <-- sincroniza sprite con el Transform inicial
+  Actor::update(0.f);
 }
 
 void A_Racer::reset() {
-  // Misma idea del setPath: volver a inicio y apuntar al segundo punto
   m_currentLap = 0;
   m_place = 0;
   m_crossedLastFrame = false;
@@ -46,6 +44,9 @@ void A_Racer::reset() {
     }
   }
   currentWaypointIndex = (path.size() > 1 ? 1 : 0);
+
+  // <-- sincroniza sprite tras el reset
+  Actor::update(0.f);
 }
 
 float A_Racer::getProgress() const {
@@ -69,16 +70,16 @@ float A_Racer::getProgress() const {
 }
 
 void A_Racer::update(float deltaTime) {
-  if (isFinished() || path.size() < 2) return;
+  if (!isFinished() && path.size() >= 2) {
+    doPathFollowing(deltaTime);
 
-  doPathFollowing(deltaTime);
-
-  // Conteo de vueltas por cruce de línea
-  bool inside = m_finishLine.contains(getComponent<Transform>()->getPosition());
-  if (inside && !m_crossedLastFrame) {
-    ++m_currentLap;
+    bool inside = m_finishLine.contains(getComponent<Transform>()->getPosition());
+    if (inside && !m_crossedLastFrame) ++m_currentLap;
+    m_crossedLastFrame = inside;
   }
-  m_crossedLastFrame = inside;
+
+  // <-- clave: copiar Transform -> sprite cada frame
+  Actor::update(deltaTime);
 }
 
 void A_Racer::doPathFollowing(float dt) {
