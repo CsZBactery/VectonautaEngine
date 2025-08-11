@@ -19,19 +19,22 @@ A_Racer::A_Racer(const std::string& name, int /*playerId*/)
 
 void A_Racer::setPath(const std::vector<sf::Vector2f>& pathPoints) {
   path = pathPoints;
-  currentWaypointIndex = 0;
 
-  // Colócalo al inicio del camino
+  // Posición inicial en el primer punto
   if (!path.empty()) {
     if (auto xf = getComponent<Transform>()) {
       xf->setPosition(path.front());
       xf->setRotation(0.f);
     }
   }
+
+  // << FIX >> que evita el 99% al inicio:
+  // apuntemos al SEGUNDO waypoint como objetivo inicial
+  currentWaypointIndex = (path.size() > 1 ? 1 : 0);
 }
 
 void A_Racer::reset() {
-  currentWaypointIndex = 0;
+  // Misma idea del setPath: volver a inicio y apuntar al segundo punto
   m_currentLap = 0;
   m_place = 0;
   m_crossedLastFrame = false;
@@ -42,25 +45,27 @@ void A_Racer::reset() {
       xf->setRotation(0.f);
     }
   }
+  currentWaypointIndex = (path.size() > 1 ? 1 : 0);
 }
 
 float A_Racer::getProgress() const {
-  if (path.size() < 2) return float(m_currentLap) / std::max(1, m_totalLaps);
+  // Progreso dentro de la vuelta (0..1)
+  const int N = (int)path.size();
+  if (N < 2) return 0.f;
 
-  // Aproximación: progreso = (waypoints completados + fracción del segmento actual) / |path|
   auto xf = const_cast<A_Racer*>(this)->getComponent<Transform>();
-  sf::Vector2f pos = xf ? xf->getPosition() : path[currentWaypointIndex];
+  sf::Vector2f pos = xf ? xf->getPosition() : path.front();
 
-  int prev = (currentWaypointIndex - 1 + int(path.size())) % int(path.size());
+  const int cur = (currentWaypointIndex % N);
+  const int prev = (cur + N - 1) % N;
+
   const sf::Vector2f A = path[prev];
-  const sf::Vector2f B = path[currentWaypointIndex];
+  const sf::Vector2f B = path[cur];
 
-  float segLen = std::max(1e-4f, vlen(B - A));
-  float frac = 1.f - clamp01(vlen(B - pos) / segLen);
+  const float segLen = std::max(1e-4f, vlen(B - A));
+  const float t = 1.f - clamp01(vlen(B - pos) / segLen); // 0 en A, 1 en B
 
-  float loopFrac = (float(prev) + frac) / float(path.size());
-  // Si llevas vueltas, suma (solo informativo)
-  return clamp01(loopFrac);
+  return clamp01((prev + t) / float(N));
 }
 
 void A_Racer::update(float deltaTime) {
@@ -68,10 +73,9 @@ void A_Racer::update(float deltaTime) {
 
   doPathFollowing(deltaTime);
 
-  // --- Conteo de vueltas por cruce de meta ---
+  // Conteo de vueltas por cruce de línea
   bool inside = m_finishLine.contains(getComponent<Transform>()->getPosition());
   if (inside && !m_crossedLastFrame) {
-    // Entró a la zona de meta este frame -> nueva vuelta
     ++m_currentLap;
   }
   m_crossedLastFrame = inside;
@@ -94,7 +98,7 @@ void A_Racer::doPathFollowing(float dt) {
     d = vlen(to);
   }
 
-  // Punto de mirada adelante para suavizar curvas (pure-pursuit sencillo)
+  // Pure pursuit sencillo: mirar un poco más adelante del objetivo
   if (path.size() >= 2) {
     int next = (currentWaypointIndex + 1) % int(path.size());
     sf::Vector2f dirSeg = vnorm(path[next] - path[currentWaypointIndex]);
@@ -107,13 +111,12 @@ void A_Racer::doPathFollowing(float dt) {
   if (d > 1e-4f) {
     sf::Vector2f dir = vnorm(to);
 
-    // Arrive: frena al acercarse al punto de mira
-    float brakeRadius = lookaheadDistance * 1.5f;
+    // Arrive: frena al acercarse al punto
+    const float brakeRadius = lookaheadDistance * 1.5f;
     float speed = (d < brakeRadius) ? (m_maxSpeed * (d / brakeRadius)) : m_maxSpeed;
 
     pos += dir * speed * dt;
 
-    // Orientación del sprite
     float angleDeg = std::atan2(dir.y, dir.x) * 180.f / 3.14159265f;
     xf->setRotation(angleDeg);
     xf->setPosition(pos);

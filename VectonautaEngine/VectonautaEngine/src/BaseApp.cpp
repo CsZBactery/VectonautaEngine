@@ -76,6 +76,20 @@ int BaseApp::run()
     if (!m_trackActor.isNull())
       m_trackActor->render(m_windowPtr);
 
+    // DEBUG (#5): puntitos amarillos en la posición de cada racer
+    {
+      sf::CircleShape dot(5.f);
+      dot.setFillColor(sf::Color::Yellow);
+      for (auto& r : m_racers) {
+        if (!r) continue;
+        if (auto xf = r->getComponent<Transform>()) {
+          dot.setPosition(xf->getPosition());
+          m_windowPtr->draw(dot);
+        }
+      }
+    }
+
+    // Sprites de los racers
     for (auto& r : m_racers)
       if (r) r->render(m_windowPtr);
 
@@ -98,7 +112,6 @@ bool BaseApp::init()
 
   // 2) GUI
   gui.init(m_windowPtr);
-  // (Opcional: si ya tienes callback)  gui.setOnExit([this](){ m_windowPtr->close(); });
 
   // 3) Pista (Track.png)
   if (!resourceMan.loadTexture("Sprites/Track", "png"))
@@ -175,12 +188,14 @@ bool BaseApp::init()
   // 6) Línea de meta (posición + tamaño)
   m_finishLine = sf::FloatRect{ {1800.f,500.f}, {50.f,200.f} };
 
-  // Pasa meta y nº de vueltas a cada corredor
+  // Pasa meta, nº de vueltas y escala a cada corredor
   for (auto& r : m_racers) {
     if (!r) continue;
     r->setFinishLine(m_finishLine);
-    r->setTotalLaps(3);        // ajusta si quieres
-    // Si añadiste un setter de velocidad en A_Racer: r->setMaxSpeed(100.f + rand()%20);
+    r->setTotalLaps(3);
+    if (auto xf = r->getComponent<Transform>()) {
+      xf->setScale({ 2.5f, 2.5f }); // para que se vean bien
+    }
   }
 
   // 7) GUI arranque
