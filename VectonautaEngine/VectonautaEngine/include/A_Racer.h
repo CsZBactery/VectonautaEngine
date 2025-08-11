@@ -4,57 +4,59 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <vector>
+#include <string>
 
 /**
- * @brief Racer NPC / jugador en la pista. Gestiona place, laps y steering.
+ * @brief Racer (NPC/Jugador). Lleva path following, vueltas y posición final.
  */
 class A_Racer : public Actor {
 public:
   explicit A_Racer(const std::string& name, int playerId = 0);
 
-  void start() override {}
-  void update(float deltaTime) override;
-  void render(const EngineUtilities::TSharedPointer<Window>& window) override {
-    Actor::render(window);
-  }
+  void start() override {}                 // si no usas start, lo dejamos vacío
+  void update(float deltaTime) override;   // implementado en A_Racer.cpp
 
-  // Path que sigue el racer (debe asignarse desde fuera)
+  // Path a seguir (asígnalo desde BaseApp)
   void setPath(const std::vector<sf::Vector2f>& pathPoints);
 
-  // Reinicia al inicio
+  // Reinicia estado (vuelve al inicio del path)
   void reset();
 
-  // Línea de meta
+  // Línea de meta y vueltas
   void setFinishLine(const sf::FloatRect& rect) { m_finishLine = rect; }
-
-  // Configuración de race
   void setTotalLaps(int laps) { m_totalLaps = laps; }
   int  getCurrentLap() const { return m_currentLap; }
-  int  getTotalLaps() const { return m_totalLaps; }
-  bool isFinished()  const { return m_currentLap >= m_totalLaps; }
+  int  getTotalLaps()  const { return m_totalLaps; }
+  bool isFinished()    const { return m_currentLap >= m_totalLaps; }
 
-  // Getters / setters básicos
-  int  getPlace() const { return m_place; }
-  void setPlace(int p) { m_place = p; }
-  float getProgress() const;   // Normalizado 0..1
+  // Velocidad máxima (para diferenciar corredores)
+  void  setMaxSpeed(float s) { m_maxSpeed = s; }
+  float getMaxSpeed() const { return m_maxSpeed; }
+
+  // Podio / progreso
+  int   getPlace() const { return m_place; }
+  void  setPlace(int p) { m_place = p; }
+  float getProgress() const;   // 0..1 del loop actual (decl; impl en .cpp)
 
 private:
-  void doPathFollowing(float deltaTime);
+  void doPathFollowing(float deltaTime);   // steering hacia waypoints (impl en .cpp)
 
-  std::vector<sf::Vector2f> path;      ///< ruta completa
-  int currentWaypointIndex = 0;        ///< segmento actual
+  // --- Ruta ---
+  std::vector<sf::Vector2f> path;
+  int   currentWaypointIndex = 0;
 
-  // Parámetros de steering
-  float lookaheadDistance = 50.f;
-  float arriveRadius = 10.f;
-  float m_maxSpeed = 200.f;
+  // --- Parámetros de steering ---
+  float lookaheadDistance = 50.f;   // pure pursuit
+  float arriveRadius = 10.f;   // cambiar de waypoint
+  float m_maxSpeed = 200.f;  // px/s
 
-  // Meta/laps
-  sf::FloatRect m_finishLine;
-  int    m_currentLap = 0;
-  int    m_totalLaps = 3;
-  bool   m_crossedLastFrame = false;
+  // --- Meta / vueltas ---
+  sf::FloatRect m_finishLine{};
+  int  m_currentLap = 0;
+  int  m_totalLaps = 3;
+  bool m_crossedLastFrame = false;
 
-  // Estado de carrera
-  int m_place = 0;  ///< posición final (1,2,3...)
+  // --- Estado de carrera ---
+  int  m_place = 0;        // 0 = corriendo; 1..N = posición final
+  int  m_playerIndex = 0;  // opcional, por si lo usas en GUI
 };
