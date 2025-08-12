@@ -1,4 +1,3 @@
-// A_Racer.cpp
 #include "A_Racer.h"
 #include "ECS/Transform.h"
 #include <cmath>

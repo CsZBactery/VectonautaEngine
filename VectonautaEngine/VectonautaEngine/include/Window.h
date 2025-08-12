@@ -14,56 +14,99 @@
  */
 class Window {
 public:
+  /**
+   * @brief Constructor por defecto (no crea la ventana todavía).
+   */
   Window() = default;
 
   /**
-   * @brief Crea la ventana de una vez.
+   * @brief Crea la ventana de una vez con tamaño y título.
+   * @param width Ancho en píxeles.
+   * @param height Alto en píxeles.
+   * @param title Título de la ventana.
    */
   Window(int width, int height, const std::string& title);
 
+  /**
+   * @brief Destructor: libera la ventana y recursos asociados.
+   */
   ~Window();
 
   /**
-   * @brief Procesa los eventos pendientes.
-   * @param callback Función opcional que se llama por cada evento.
+   * @brief Procesa los eventos pendientes de SFML.
+   * @param callback Función opcional llamada por cada evento recibido.
    */
   void handleEvents(const std::function<void(const sf::Event&)>& callback = nullptr);
 
-  /// @return true si la ventana sigue abierta.
+  /**
+   * @brief Indica si la ventana sigue abierta.
+   * @return true si está abierta, false si ya se cerró.
+   */
   bool isOpen() const;
 
-  /// Limpia con el color dado.
+  /**
+   * @brief Limpia el framebuffer con el color dado.
+   * @param color Color de limpieza (por defecto negro).
+   */
   void clear(const sf::Color& color = sf::Color::Black);
 
   /**
-   * @brief Dibuja un drawable.
+   * @brief Dibuja un objeto drawable en la ventana.
+   * @param drawable Cualquier sf::Drawable (shape, sprite, text, etc.).
+   * @param states Estados de render opcionales.
    */
   void draw(const sf::Drawable& drawable,
     const sf::RenderStates& states = sf::RenderStates::Default);
 
-  /// Intercambia buffers / muestra en pantalla.
+  /**
+   * @brief Intercambia buffers y presenta en pantalla.
+   */
   void display();
 
-  /// Actualiza deltaTime interno.
+  /**
+   * @brief Actualiza el delta time interno (debe llamarse una vez por frame).
+   */
   void update();
 
-  /// Paso de render extra (placeholder).
+  /**
+   * @brief Paso de render adicional (placeholder para integraciones futuras).
+   */
   void render();
 
-  /// Cierra la ventana.
+  /**
+   * @brief Solicita el cierre de la ventana.
+   */
   void close();
 
-  /// Limpia recursos.
+  /**
+   * @brief Libera recursos asociados a la ventana.
+   */
   void destroy();
 
-  /// Acceso al sf::RenderWindow subyacente.
+  /**
+   * @brief Acceso al sf::RenderWindow subyacente.
+   * @return Referencia al objeto de SFML.
+   */
   sf::RenderWindow& getInternal();
 
-  /// Tiempo entre frames, actualizado en update().
+  /**
+   * @brief Tiempo entre frames, actualizado en update().
+   */
   sf::Time deltaTime;
 
 private:
-  sf::View                                    m_view;
+  /**
+   * @brief Vista actual usada para mapear coordenadas y dibujar.
+   */
+  sf::View m_view;
+
+  /**
+   * @brief Puntero único a la instancia de sf::RenderWindow.
+   */
   EngineUtilities::TUniquePtr<sf::RenderWindow> m_windowPtr;
-  sf::Clock   clock;
+
+  /**
+   * @brief Reloj interno para calcular deltaTime.
+   */
+  sf::Clock clock;
 };

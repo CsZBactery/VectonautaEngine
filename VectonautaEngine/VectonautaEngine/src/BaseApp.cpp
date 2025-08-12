@@ -1,5 +1,4 @@
-﻿// BaseApp.cpp
-#include "BaseApp.h"
+﻿#include "BaseApp.h"
 #include "Prerequisites.h"
 #include "Window.h"
 #include "EngineGUI.h"
