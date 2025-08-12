@@ -83,43 +83,40 @@ void A_Racer::update(float deltaTime) {
 }
 
 void A_Racer::doPathFollowing(float dt) {
+  if (path.size() < 2) return;
   auto xf = getComponent<Transform>();
   if (!xf) return;
 
   sf::Vector2f pos = xf->getPosition();
-  sf::Vector2f target = path[currentWaypointIndex];
+
+  // 1) Si estoy MUY cerca del waypoint actual, avanza varios para no quedarte pegado
+  int guard = 0;
+  while (guard < 8) {
+    sf::Vector2f toCurr = path[currentWaypointIndex] - pos;
+    if (std::sqrt(toCurr.x * toCurr.x + toCurr.y * toCurr.y) > arriveRadius) break;
+    currentWaypointIndex = (currentWaypointIndex + 1) % (int)path.size();
+    ++guard;
+  }
+
+  // 2) Pure-pursuit simplificado: mira K puntos por delante (según densidad ~30px)
+  constexpr float approxSegLen = 30.f; // igual a la densificación que usamos
+  int K = std::max(1, (int)std::round(lookaheadDistance / approxSegLen));
+  int aheadIdx = (currentWaypointIndex + K) % (int)path.size();
+  sf::Vector2f target = path[aheadIdx];
+
   sf::Vector2f to = target - pos;
-  float d = vlen(to);
+  float d = std::sqrt(to.x * to.x + to.y * to.y);
+  if (d < 1e-4f) return;
 
-  // ¿Llegamos al waypoint?
-  if (d < arriveRadius) {
-    currentWaypointIndex = (currentWaypointIndex + 1) % int(path.size());
-    target = path[currentWaypointIndex];
-    to = target - pos;
-    d = vlen(to);
-  }
+  sf::Vector2f dir = { to.x / d, to.y / d };
 
-  // Pure pursuit sencillo: mirar un poco más adelante del objetivo
-  if (path.size() >= 2) {
-    int next = (currentWaypointIndex + 1) % int(path.size());
-    sf::Vector2f dirSeg = vnorm(path[next] - path[currentWaypointIndex]);
-    float extra = std::max(0.f, lookaheadDistance - std::min(d, lookaheadDistance));
-    sf::Vector2f lookPt = target + dirSeg * extra;
-    to = lookPt - pos;
-    d = vlen(to);
-  }
+  // 3) Frenado suave al acercarse al target de lookahead
+  float brakeRadius = lookaheadDistance * 1.2f;
+  float speed = (d < brakeRadius) ? (m_maxSpeed * (d / brakeRadius)) : m_maxSpeed;
 
-  if (d > 1e-4f) {
-    sf::Vector2f dir = vnorm(to);
+  pos += dir * speed * dt;
 
-    // Arrive: frena al acercarse al punto
-    const float brakeRadius = lookaheadDistance * 1.5f;
-    float speed = (d < brakeRadius) ? (m_maxSpeed * (d / brakeRadius)) : m_maxSpeed;
-
-    pos += dir * speed * dt;
-
-    float angleDeg = std::atan2(dir.y, dir.x) * 180.f / 3.14159265f;
-    xf->setRotation(angleDeg);
-    xf->setPosition(pos);
-  }
+  float angleDeg = std::atan2(dir.y, dir.x) * 180.f / 3.14159265f;
+  xf->setRotation(angleDeg);
+  xf->setPosition(pos);
 }

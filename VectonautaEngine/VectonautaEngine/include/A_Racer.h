@@ -46,9 +46,9 @@ private:
   int   currentWaypointIndex = 0;
 
   // --- Parámetros de steering ---
-  float lookaheadDistance = 50.f;   // pure pursuit
-  float arriveRadius = 10.f;   // cambiar de waypoint
-  float m_maxSpeed = 200.f;  // px/s
+  float lookaheadDistance = 90.f;   // pure pursuit
+  float arriveRadius = 18.f;   // cambiar de waypoint
+  float m_maxSpeed = 160.f;  // px/s
 
   // --- Meta / vueltas ---
   sf::FloatRect m_finishLine{};

@@ -319,9 +319,9 @@ bool BaseApp::init()
 
   // Carriles por offset (valores moderados; ajusta según ancho de pista)
   auto base = m_path;
-  auto laneA = offsetClosed(base, +12.f);
-  auto laneB = offsetClosed(base, -12.f);
-  auto laneC = offsetClosed(base, +24.f);
+  auto laneA = offsetClosed(base, +8.f);
+  auto laneB = offsetClosed(base, -8.f);
+  auto laneC = offsetClosed(base, +16.f);
 
   r1->setPath(base);
   r2->setPath(laneA);
