@@ -8,133 +8,134 @@
 
 /**
  * @class A_Racer
- * @brief Racer (NPC/Jugador). Lleva path following, vueltas y posición final.
+ * @brief Corredor (NPC/Jugador) que sigue un path, cuenta vueltas y soporta
+ *        un offset de ángulo para alinear el sprite con la dirección de marcha.
  */
 class A_Racer : public Actor {
 public:
   /**
-   * @brief Crea un corredor con nombre y un id opcional de jugador.
-   * @param name Nombre visible del corredor.
-   * @param playerId Índice de jugador (0 si es NPC).
+   * @brief Construye un corredor.
+   * @param name Nombre del actor (para GUI/depuración).
+   * @param playerId Identificador opcional del jugador (0 = IA).
    */
   explicit A_Racer(const std::string& name, int playerId = 0);
 
   /**
-   * @brief Hook de inicio (vacío si no se usa).
+   * @brief Hook de inicio (no usado actualmente).
    */
   void start() override {}
 
   /**
-   * @brief Actualiza el estado del corredor cada frame.
-   * @param deltaTime Tiempo transcurrido en segundos.
+   * @brief Actualiza el corredor: steering hacia el siguiente waypoint,
+   *        avance de vueltas y orientación del sprite.
+   * @param deltaTime Tiempo transcurrido desde el frame anterior.
    */
   void update(float deltaTime) override;
 
   /**
-   * @brief Asigna el path (lista de puntos) que el corredor debe seguir.
-   * @param pathPoints Puntos (en orden) del trazado.
+   * @brief Define la ruta (lista de waypoints en orden) que seguirá el corredor.
+   * @param pathPoints Polilínea cerrada (o abierta) de puntos en coordenadas de mundo.
    */
   void setPath(const std::vector<sf::Vector2f>& pathPoints);
 
   /**
-   * @brief Reinicia el estado del corredor al inicio del path.
+   * @brief Reinicia el estado del corredor al inicio del path (sin vueltas ni podio).
    */
   void reset();
 
   /**
-   * @brief Define el rectángulo de meta para contar vueltas.
-   * @param rect Área de meta (sf::FloatRect).
+   * @brief Define el rectángulo de meta utilizado para contar vueltas.
+   * @param rect Rectángulo en coordenadas de mundo.
    */
   void setFinishLine(const sf::FloatRect& rect) { m_finishLine = rect; }
 
   /**
-   * @brief Fija el número total de vueltas de la carrera.
-   * @param laps Vueltas totales.
+   * @brief Fija el número total de vueltas.
+   * @param laps Conteo de vueltas a completar.
    */
   void setTotalLaps(int laps) { m_totalLaps = laps; }
 
   /**
-   * @brief Devuelve la vuelta actual (0..total).
-   * @return Vuelta alcanzada.
+   * @brief Obtiene la vuelta actual (0..totalLaps).
    */
   int  getCurrentLap() const { return m_currentLap; }
 
   /**
    * @brief Devuelve el total de vueltas configurado.
-   * @return Vueltas totales.
    */
   int  getTotalLaps()  const { return m_totalLaps; }
 
   /**
-   * @brief Indica si el corredor ya terminó todas sus vueltas.
-   * @return true si terminó, false en caso contrario.
+   * @brief Indica si ya terminó todas las vueltas.
    */
   bool isFinished()    const { return m_currentLap >= m_totalLaps; }
 
   /**
-   * @brief Configura la velocidad máxima (px/s) del corredor.
-   * @param s Velocidad máxima.
+   * @brief Ajusta la velocidad máxima del corredor (px/s).
+   * @param s Nueva velocidad máxima.
    */
   void  setMaxSpeed(float s) { m_maxSpeed = s; }
 
   /**
-   * @brief Obtiene la velocidad máxima configurada.
-   * @return Velocidad máxima (px/s).
+   * @brief Devuelve la velocidad máxima actual (px/s).
    */
   float getMaxSpeed() const { return m_maxSpeed; }
 
   /**
-   * @brief Progreso normalizado de la vuelta actual.
-   * @return Valor en [0..1].
-   */
-  float getProgress() const;   // 0..1 del loop actual (decl; impl en .cpp)
-
-  /**
-   * @brief Posición final de podio (1..N), 0 si sigue corriendo.
-   * @return Place actual.
+   * @brief Posición de podio alcanzada (0 = aún corriendo, 1..N = finalizado).
    */
   int   getPlace() const { return m_place; }
 
   /**
-   * @brief Asigna la posición de podio (1..N) cuando finaliza.
-   * @param p Posición final.
+   * @brief Fija la posición de podio alcanzada.
+   * @param p 1..N cuando finaliza; 0 para “corriendo”.
    */
   void  setPlace(int p) { m_place = p; }
 
+  /**
+   * @brief Progreso normalizado a lo largo del loop actual [0..1].
+   */
+  float getProgress() const;
+
+  /**
+   * @brief Define un offset angular (en grados) que se suma a la orientación
+   *        calculada por el steering para alinear el sprite.
+   *        Útil cuando la textura “mira hacia arriba” o “a la derecha”.
+   * @param deg Offset en grados (p. ej., -90 si el sprite mira hacia arriba).
+   */
+  void  setSpriteAngleOffset(float deg) { m_spriteAngleOffset = deg; }
+
+  /**
+   * @brief Obtiene el offset angular aplicado al sprite (en grados).
+   */
+  float getSpriteAngleOffset() const { return m_spriteAngleOffset; }
+
 private:
   /**
-   * @brief Lógica de seguimiento del path (steering hacia waypoints).
-   * @param deltaTime Tiempo transcurrido en segundos.
+   * @brief Lógica de seguimiento del path (Pure Pursuit + arrive).
+   * @param deltaTime Tiempo transcurrido desde el frame anterior.
    */
   void doPathFollowing(float deltaTime);
 
-  // --- Ruta ---
-  /** @brief Puntos del trazado a seguir. */
-  std::vector<sf::Vector2f> path;
-  /** @brief Índice del waypoint actual. */
-  int   currentWaypointIndex = 0;
+  // --- Ruta / waypoints ---
+  std::vector<sf::Vector2f> path;   ///< Waypoints del recorrido, en orden.
+  int   currentWaypointIndex = 0;   ///< Índice del waypoint objetivo actual.
 
   // --- Parámetros de steering ---
-  /** @brief Distancia de mirada por delante (pure pursuit). */
-  float lookaheadDistance = 90.f;
-  /** @brief Radio para considerar alcanzado el waypoint. */
-  float arriveRadius = 18.f;
-  /** @brief Velocidad máxima en píxeles/segundo. */
-  float m_maxSpeed = 160.f;
+  float lookaheadDistance = 60.f;   ///< Distancia de mirada hacia delante (suaviza curvas).
+  float arriveRadius = 30.f;   ///< Umbral para “cambiar” al siguiente waypoint.
+  float m_maxSpeed = 160.f;  ///< Velocidad máxima (px/s).
 
   // --- Meta / vueltas ---
-  /** @brief Rectángulo de meta usado para contar vueltas. */
-  sf::FloatRect m_finishLine{};
-  /** @brief Vuelta actual. */
-  int  m_currentLap = 0;
-  /** @brief Vueltas totales a completar. */
-  int  m_totalLaps = 3;
-  /** @brief Flag para detectar flanco de cruce de meta. */
-  bool m_crossedLastFrame = false;
+  sf::FloatRect m_finishLine{};     ///< Rectángulo usado para detectar paso por meta.
+  int  m_currentLap = 0;            ///< Vuelta actual.
+  int  m_totalLaps = 3;            ///< Vueltas a completar.
+  bool m_crossedLastFrame = false;  ///< Evita contar varias veces la misma pasada por meta.
 
   // --- Estado de carrera ---
-  /** @brief Posición de podio (0 si aún no termina). */
-  int  m_place = 0;
-  /** @brief Índice de jugador (para UI o input), opcional. */
-  int  m_playerIndex = 0;
+  int  m_place = 0;                 ///< 0 = corriendo; 1..N = posición final.
+  int  m_playerIndex = 0;           ///< Identificador opcional para GUI/depuración.
+
+  // --- Orientación del sprite ---
+  float m_spriteAngleOffset = -90.f; ///< Offset en grados sumado a la rotación calculada.
 };

@@ -82,40 +82,60 @@ void A_Racer::update(float deltaTime) {
 }
 
 void A_Racer::doPathFollowing(float dt) {
-  if (path.size() < 2) return;
   auto xf = getComponent<Transform>();
-  if (!xf) return;
+  if (!xf || path.size() < 2) return;
 
   sf::Vector2f pos = xf->getPosition();
 
-  // 1) Si estoy MUY cerca del waypoint actual, avanza varios para no quedarte pegado
-  int guard = 0;
-  while (guard < 8) {
-    sf::Vector2f toCurr = path[currentWaypointIndex] - pos;
-    if (std::sqrt(toCurr.x * toCurr.x + toCurr.y * toCurr.y) > arriveRadius) break;
-    currentWaypointIndex = (currentWaypointIndex + 1) % (int)path.size();
-    ++guard;
+  // Segmento actual A->B
+  const int N = (int)path.size();
+  int i = currentWaypointIndex;
+  sf::Vector2f A = path[i];
+  sf::Vector2f B = path[(i + 1) % N];
+  sf::Vector2f AB = B - A;
+  float abLen2 = AB.x * AB.x + AB.y * AB.y;
+  if (abLen2 < 1e-6f) { currentWaypointIndex = (i + 1) % N; return; }
+  float abLen = std::sqrt(abLen2);
+
+  // Proyección del coche sobre el segmento A->B
+  sf::Vector2f AP = pos - A;
+  float t = (AP.x * AB.x + AP.y * AB.y) / abLen2; // 0..1 si estás dentro del segmento
+
+  // Regla de avance de waypoint:
+  // - Si ya pasaste B (t > 1), o
+  // - Si estás suficientemente cerca de B,
+  //   avanza al siguiente
+  float distToB = std::hypot(pos.x - B.x, pos.y - B.y);
+  if (t > 1.f || distToB < arriveRadius) {
+    currentWaypointIndex = (i + 1) % N;
+    i = currentWaypointIndex;
+    A = path[i];
+    B = path[(i + 1) % N];
+    AB = B - A;
+    abLen2 = AB.x * AB.x + AB.y * AB.y;
+    abLen = std::sqrt(abLen2);
+    if (abLen2 < 1e-6f) return;
+    AP = pos - A;
+    t = (AP.x * AB.x + AP.y * AB.y) / abLen2;
   }
 
-  // 2) Pure-pursuit simplificado: mira K puntos por delante (según densidad ~30px)
-  constexpr float approxSegLen = 30.f; // igual a la densificación que usamos
-  int K = std::max(1, (int)std::round(lookaheadDistance / approxSegLen));
-  int aheadIdx = (currentWaypointIndex + K) % (int)path.size();
-  sf::Vector2f target = path[aheadIdx];
+  // Punto de persecución (pure pursuit) a partir de la proyección + lookahead
+  float s = std::clamp(t + (lookaheadDistance / std::max(abLen, 1e-3f)), 0.f, 1.f);
+  sf::Vector2f pursue = A + AB * s;
 
-  sf::Vector2f to = target - pos;
-  float d = std::sqrt(to.x * to.x + to.y * to.y);
-  if (d < 1e-4f) return;
+  // Velocidad con frenado suave al aproximarse al punto de persecución
+  sf::Vector2f to = pursue - pos;
+  float d = std::hypot(to.x, to.y);
+  if (d > 1e-4f) {
+    sf::Vector2f dir = { to.x / d, to.y / d };
 
-  sf::Vector2f dir = { to.x / d, to.y / d };
+    float brakeRadius = lookaheadDistance * 1.2f;
+    float speed = (d < brakeRadius) ? (m_maxSpeed * (d / brakeRadius)) : m_maxSpeed;
 
-  // 3) Frenado suave al acercarse al target de lookahead
-  float brakeRadius = lookaheadDistance * 1.2f;
-  float speed = (d < brakeRadius) ? (m_maxSpeed * (d / brakeRadius)) : m_maxSpeed;
+    pos += dir * speed * dt;
 
-  pos += dir * speed * dt;
-
-  float angleDeg = std::atan2(dir.y, dir.x) * 180.f / 3.14159265f;
-  xf->setRotation(angleDeg);
-  xf->setPosition(pos);
+    float angleDeg = std::atan2(dir.y, dir.x) * 180.f / 3.14159265f;
+    xf->setRotation(angleDeg + m_spriteAngleOffset);
+    xf->setPosition(pos);
+  }
 }

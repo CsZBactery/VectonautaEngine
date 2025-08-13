@@ -1,77 +1,70 @@
 #pragma once
-
 /**
- * @file BaseApp.h
- * @brief Defines the BaseApp class, which manages the main application loop and rendering.
+ * @brief Cabecera principal de la aplicación del motor (loop, GUI y escena base).
+ *
+ * Administra la ventana, la GUI, los recursos, el circuito y los corredores.
+ * Expone utilidades para inicializar/ejecutar/destruir y para aplicar una
+ * ruta (path) editada a los corredores.
  */
 
-#include <Prerequisites.h>
-#include <ResourceManager.h>
-#include <Window.h>
+#include "Prerequisites.h"
+#include "Window.h"
 #include "EngineGUI.h"
-#include <CShape.h>
-#include <ECS/Transform.h>
-#include <ECS/Actor.h>
-#include <A_Racer.h>
+#include "ResourceManager.h"
+#include "ECS/Texture.h"
+#include "A_Racer.h"
 
+#include <SFML/Graphics.hpp>
 #include <vector>
-#include <SFML/System.hpp>
 
  /**
-  * @class BaseApp
-  * @brief Core application class that controls initialization, the main loop, rendering, and cleanup.
+  * @brief Aplicación base que contiene el ciclo principal y estado de la escena.
   */
 class BaseApp {
 public:
-  /**
-   * @brief Default constructor.
-   */
   BaseApp() = default;
-
-  /**
-   * @brief Destructor that handles cleanup.
-   */
   ~BaseApp();
 
   /**
-   * @brief Runs the application.
-   * This method initializes the application, enters the main loop, and calls update/render methods.
-   * @return Exit code of the application.
+   * @brief Ejecuta el bucle principal de la app.
+   * @return Código de salida (0 si todo fue bien).
    */
-  int  run();
+  int run();
 
   /**
-   * @brief Initializes the application window and objects.
-   * @return True if initialization was successful, false otherwise.
+   * @brief Inicializa ventana, GUI, recursos y crea la escena inicial.
+   * @return true si la inicialización fue correcta.
    */
   bool init();
 
   /**
-   * @brief Updates the application logic (called every frame).
+   * @brief Libera/termina los recursos de la aplicación.
    */
-  void update() {}
-
-  /**
-   * @brief Renders all drawable objects to the screen.
-   */
-  void render() {}
-
-  /**
-   * @brief Releases all allocated resources and cleans up.
-   */
-  void destroy() {}
+  void destroy();
 
 private:
-  EngineUtilities::TSharedPointer<Window>           m_windowPtr;
-  EngineUtilities::TSharedPointer<Actor>            m_trackActor;
-  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;
-  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_finishedOrder;
+  /**
+   * @brief Aplica un conjunto de puntos cerrados a los corredores.
+   *
+   * Densifica el path, genera carriles (offsets), posiciona a cada
+   * corredor en su carril y hace reset de su estado.
+   *
+   * @param pts Puntos del circuito (deben formar un lazo; si no, se cierra).
+   */
+  void applyCurrentPathToRacers(const std::vector<sf::Vector2f>& pts);
 
-  ResourceManager   resourceMan;
-  EngineGUI         gui;
+private:
+  // --- Infraestructura ---
+  EngineUtilities::TSharedPointer<Window> m_windowPtr; ///< @brief Ventana principal.
+  EngineGUI                                gui;        ///< @brief Paneles y controles de GUI.
+  ResourceManager                          resourceMan;///< @brief Gestor de texturas/recursos.
 
-  std::vector<sf::Vector2f> m_path;
-  sf::FloatRect             m_finishLine;
-  float                     m_raceTimer = 0.f;
-  bool                      m_raceStarted = false;
+  // --- Escena ---
+  EngineUtilities::TSharedPointer<Actor>   m_trackActor; ///< @brief Actor del mapa/pista.
+  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;         ///< @brief Corredores activos.
+  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_finishedOrder;  ///< @brief Orden de llegada.
+
+  // --- Carrera ---
+  std::vector<sf::Vector2f> m_path;   ///< @brief Path base (carril 0, densificado).
+  sf::FloatRect             m_finishLine; ///< @brief Recta de meta para conteo de vueltas.
 };

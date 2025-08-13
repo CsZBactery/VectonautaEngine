@@ -1,50 +1,52 @@
-﻿#include "BaseApp.h"
-#include "Prerequisites.h"
-#include "Window.h"
-#include "EngineGUI.h"
-#include "A_Racer.h"
+﻿// BaseApp.cpp
+#include "BaseApp.h"
 #include "ECS/Transform.h"
 #include "CShape.h"
+
 #include <SFML/Graphics.hpp>
+
 #include <cmath>
 #include <iostream>
-#include <algorithm>   // std::max
-#include <fstream>     // save/load path
+#include <algorithm>
+#include <fstream>
+#include <filesystem>
 
-namespace { // ------- helpers de geometría / path -------
+// ===== Helpers geométricos / path =====
+namespace {
 
   inline float vlen(const sf::Vector2f& v) { return std::sqrt(v.x * v.x + v.y * v.y); }
   inline sf::Vector2f vnorm(const sf::Vector2f& v) {
-    float L = vlen(v); return (L > 1e-6f) ? sf::Vector2f{ v.x / L, v.y / L } : sf::Vector2f{ 0.f,0.f };
+    float L = vlen(v);
+    return (L > 1e-6f) ? sf::Vector2f{ v.x / L, v.y / L } : sf::Vector2f{ 0.f,0.f };
   }
   inline sf::Vector2f vperp(const sf::Vector2f& v) { return sf::Vector2f{ -v.y, v.x }; }
 
-  // Densifica una polilínea cerrada para que los segmentos no superen maxSegLen px
+  // Densifica una polilínea cerrada para que los segmentos no superen maxSegLen
   std::vector<sf::Vector2f> densifyClosed(const std::vector<sf::Vector2f>& pts, float maxSegLen) {
     std::vector<sf::Vector2f> out;
     if (pts.size() < 2) return out;
     const int N = (int)pts.size();
     out.reserve(N * 4);
-    for (int i = 0;i < N;++i) {
+    for (int i = 0; i < N; ++i) {
       const sf::Vector2f A = pts[i];
       const sf::Vector2f B = pts[(i + 1) % N];
       out.push_back(A);
       const float d = vlen(B - A);
       if (d > maxSegLen) {
         int steps = std::max(1, (int)std::floor(d / maxSegLen));
-        sf::Vector2f dir = (B - A) * (1.f / (float)(steps + 1));
-        for (int k = 1;k <= steps;++k) out.push_back(A + dir * (float)k);
+        sf::Vector2f step = (B - A) * (1.f / (float)(steps + 1));
+        for (int k = 1; k <= steps; ++k) out.push_back(A + step * (float)k);
       }
     }
     return out;
   }
 
-  // Offset lateral de una polilínea cerrada usando bisectriz (más suave en curvas)
+  // Offset lateral con bisectriz (más suave)
   std::vector<sf::Vector2f> offsetClosed(const std::vector<sf::Vector2f>& path, float offsetPx) {
     const int N = (int)path.size();
     if (N < 2 || std::abs(offsetPx) < 1e-6f) return path;
     std::vector<sf::Vector2f> res(N);
-    for (int i = 0;i < N;++i) {
+    for (int i = 0; i < N; ++i) {
       const sf::Vector2f Pm = path[(i - 1 + N) % N];
       const sf::Vector2f P = path[i];
       const sf::Vector2f Pp = path[(i + 1) % N];
@@ -60,10 +62,9 @@ namespace { // ------- helpers de geometría / path -------
     return res;
   }
 
-  // Debug: dibuja una polilínea cerrada con puntos
+  // Dibuja una polilínea cerrada
   void drawClosedPath(Window& w, const std::vector<sf::Vector2f>& p, sf::Color col) {
     if (p.size() < 2) return;
-
     sf::VertexArray va(sf::PrimitiveType::LineStrip);
     va.resize(p.size() + 1);
     for (std::size_t i = 0; i < p.size(); ++i) {
@@ -72,35 +73,74 @@ namespace { // ------- helpers de geometría / path -------
     }
     va[p.size()].position = p[0];
     va[p.size()].color = col;
-
     w.draw(va);
 
     sf::CircleShape c(3.f); c.setFillColor(col);
     for (auto& pt : p) { c.setPosition(pt - sf::Vector2f{ 3.f,3.f }); w.draw(c); }
   }
 
+  // Rutas de assets relativizadas a $(ProjectDir)/bin
+  static std::filesystem::path assetPath(const std::string& rel) {
+    auto p = std::filesystem::current_path() / "bin" / rel;
+    std::error_code ec;
+    auto canon = std::filesystem::weakly_canonical(p, ec);
+    return ec ? p : canon;
+  }
+
+  // Guarda / carga de ruta (x y por línea)
+  static bool savePathTxt(const std::string& rel, const std::vector<sf::Vector2f>& pts) {
+    auto path = assetPath(rel);
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream f(path);
+    if (!f) return false;
+    for (auto& p : pts) f << p.x << " " << p.y << "\n";
+    return true;
+  }
+  static bool loadPathTxt(const std::string& rel, std::vector<sf::Vector2f>& out) {
+    auto path = assetPath(rel);
+    std::ifstream f(path);
+    if (!f) return false;
+    out.clear();
+    float x, y; while (f >> x >> y) out.push_back({ x,y });
+    return !out.empty();
+  }
+
 } // namespace
 
-// ----- Estado de editor de ruta (file-scope para no tocar BaseApp.h) -----
+// ===== Estado de editor (global para no tocar headers) =====
 static bool s_editMode = false;
 static std::vector<sf::Vector2f> s_editPts;
-
-// Guarda/lee una ruta simple (x y por línea)
-static bool savePathTxt(const std::string& path, const std::vector<sf::Vector2f>& pts) {
-  std::ofstream f(path); if (!f) return false;
-  for (auto& p : pts) f << p.x << " " << p.y << "\n";
-  return true;
-}
-static bool loadPathTxt(const std::string& path, std::vector<sf::Vector2f>& out) {
-  std::ifstream f(path); if (!f) return false;
-  out.clear();
-  float x, y; while (f >> x >> y) out.push_back({ x,y });
-  return !out.empty();
-}
 
 // ---------------- BaseApp ----------------
 
 BaseApp::~BaseApp() {}
+
+void BaseApp::applyCurrentPathToRacers(const std::vector<sf::Vector2f>& ptsIn)
+{
+  if (ptsIn.size() < 3) return;
+
+  // Asegura lazo cerrado (copia local para no modificar editor)
+  std::vector<sf::Vector2f> pts = ptsIn;
+  if (vlen(pts.front() - pts.back()) > 5.f)
+    pts.push_back(pts.front());
+
+  // Densificar + carriles
+  m_path = densifyClosed(pts, 30.f);
+  std::vector<std::vector<sf::Vector2f>> lanes{
+      m_path,
+      offsetClosed(m_path, +12.f),
+      offsetClosed(m_path, -12.f),
+      offsetClosed(m_path, +24.f),
+  };
+
+  for (size_t i = 0; i < m_racers.size(); ++i) {
+    auto lane = lanes[std::min(i, lanes.size() - 1)];
+    m_racers[i]->setPath(lane);
+    if (auto xf = m_racers[i]->getComponent<Transform>())
+      xf->setPosition(lane.front());
+    m_racers[i]->reset(); // importante: arrancan en el nuevo path
+  }
+}
 
 int BaseApp::run()
 {
@@ -111,33 +151,8 @@ int BaseApp::run()
 
   float raceTimer = 0.f;
 
-  // ⚙️ Lambda para finalizar el trazado (sin usar sf::Event por defecto)
-  auto finalizePath = [&]() {
-    if (!s_editMode || s_editPts.size() < 3) return;
-
-    // Cerrar el lazo si falta
-    if (vlen(s_editPts.front() - s_editPts.back()) > 5.f)
-      s_editPts.push_back(s_editPts.front());
-
-    // Densificar y aplicar carriles
-    m_path = densifyClosed(s_editPts, 30.f);
-
-    std::vector<std::vector<sf::Vector2f>> lanes;
-    lanes.push_back(m_path);
-    lanes.push_back(offsetClosed(m_path, +12.f));
-    lanes.push_back(offsetClosed(m_path, -12.f));
-    lanes.push_back(offsetClosed(m_path, +24.f));
-
-    for (std::size_t i = 0; i < m_racers.size(); ++i) {
-      auto lane = lanes[std::min<std::size_t>(i, lanes.size() - 1)];
-      m_racers[i]->setPath(lane);
-      if (auto xf = m_racers[i]->getComponent<Transform>())
-        xf->setPosition(lane.front());
-    }
-    };
-
   while (m_windowPtr->isOpen()) {
-    // ── Eventos ─────────────────────────────────────────────────────────────
+    // Eventos
     m_windowPtr->handleEvents([&](const sf::Event& e) {
       gui.processEvent(m_windowPtr, e);
 
@@ -153,33 +168,32 @@ int BaseApp::run()
           s_editPts.pop_back();
         if (s_editMode && kp->scancode == sf::Keyboard::Scancode::C)
           s_editPts.clear();
-        if (s_editMode && kp->scancode == sf::Keyboard::Scancode::F)
-          finalizePath(); // ✅ sin sf::Event falso
+        if (s_editMode && kp->scancode == sf::Keyboard::Scancode::F && s_editPts.size() >= 3) {
+          applyCurrentPathToRacers(s_editPts);
+        }
       }
+
       if (e.is<sf::Event::MouseButtonPressed>()) {
         if (!s_editMode) return;
         auto mb = e.getIf<sf::Event::MouseButtonPressed>();
         if (!mb || mb->button != sf::Mouse::Button::Left) return;
 
-        // Mapeo pixel->coords (usa la view actual)
         auto& rw = m_windowPtr->getInternal();
         sf::Vector2i pix = sf::Mouse::getPosition(rw);
         sf::Vector2f world = rw.mapPixelToCoords(pix);
-
         s_editPts.push_back(world);
       }
       });
 
-    // ── Tiempo ──────────────────────────────────────────────────────────────
+    // Tiempo
     m_windowPtr->update();
     float dt = m_windowPtr->deltaTime.asSeconds();
     if (!gui.isPaused())
       raceTimer += dt * gui.getSpeedMultiplier();
 
-    // ── Lógica de carrera ───────────────────────────────────────────────────
+    // Lógica de carrera
     for (auto& r : m_racers) {
       if (!r) continue;
-
       if (!gui.isPaused())
         r->update(dt * gui.getSpeedMultiplier());
 
@@ -197,33 +211,36 @@ int BaseApp::run()
       raceTimer = 0.f;
     }
 
-    // ── GUI ─────────────────────────────────────────────────────────────────
+    // GUI (panel racers)
     gui.setRacers(m_racers);
     gui.update(m_windowPtr, m_windowPtr->deltaTime, raceTimer);
     if (gui.shouldQuit()) m_windowPtr->close();
 
-    // Ventana chiquita de Path Tools
+    // Ventana de herramientas de path
     {
       ImGui::Begin("Path Tools", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
       ImGui::Text("Edit mode: %s  (press 'E' to toggle)", s_editMode ? "ON" : "OFF");
       ImGui::Text("Points: %d", (int)s_editPts.size());
       if (ImGui::Button("Finalize (F)")) {
-        finalizePath(); // ✅ llamar directo
+        applyCurrentPathToRacers(s_editPts);
       }
       if (ImGui::Button("Save path")) {
-        savePathTxt("bin/Paths/track.path", s_editPts);
+        savePathTxt("Paths/track.path", s_editPts.empty() ? m_path : s_editPts);
       }
       ImGui::SameLine();
       if (ImGui::Button("Load path")) {
         std::vector<sf::Vector2f> tmp;
-        if (loadPathTxt("bin/Paths/track.path", tmp)) s_editPts = tmp;
+        if (loadPathTxt("Paths/track.path", tmp)) {
+          s_editPts = tmp;            // deja ver los puntos en magenta
+          applyCurrentPathToRacers(s_editPts); // ¡aplicar de inmediato!
+        }
       }
       ImGui::Separator();
       ImGui::Text("Click izq: add point | Z: undo | C: clear | F: finish");
       ImGui::End();
     }
 
-    // ── Render ──────────────────────────────────────────────────────────────
+    // Render
     m_windowPtr->clear(sf::Color::Black);
 
     if (!m_trackActor.isNull())
@@ -234,7 +251,7 @@ int BaseApp::run()
     // Ruta en edición (magenta)
     if (!s_editPts.empty()) drawClosedPath(*m_windowPtr, s_editPts, sf::Color(255, 0, 255));
 
-    // Puntitos amarillos (posición real)
+    // Puntitos amarillos = posición real de cada corredor
     {
       sf::CircleShape dot(5.f);
       dot.setFillColor(sf::Color::Yellow);
@@ -261,17 +278,17 @@ int BaseApp::run()
 
 bool BaseApp::init()
 {
-  // 1) Ventana
+  // Ventana
   m_windowPtr = EngineUtilities::MakeShared<Window>(1920, 1080, "VectonautaEngine");
   if (!m_windowPtr) {
     ERROR("BaseApp", "init", "Failed to create window");
     return false;
   }
 
-  // 2) GUI
+  // GUI
   gui.init(m_windowPtr);
 
-  // 3) Pista (Track.png)
+  // Pista (Track.png)
   if (!resourceMan.loadTexture("Sprites/Track", "png"))
     MESSAGE("BaseApp", "init", "Cannot load Track.png");
 
@@ -303,37 +320,13 @@ bool BaseApp::init()
   m_trackActor->setTexture(trackTex);
   m_trackActor->getComponent<Transform>()->setPosition({ 0.f, 0.f });
 
-  // 4) Ruta inicial mínima (puedes borrarla y dibujar la tuya)
-  m_path = {
-      {100.f,150.f}, {300.f,140.f}, {500.f,160.f}, {700.f,300.f},
-      {900.f,280.f}, {1100.f,500.f}, {1300.f,480.f}, {1500.f,450.f}
-  };
-  m_path = densifyClosed(m_path, 30.f);
-
-  // 5) Corredores (Mario, Luigi, Peach, Yoshi)
+  // Corredores (Mario, Luigi, Peach, Yoshi)
   auto r1 = EngineUtilities::MakeShared<A_Racer>("Mario", 1);
   auto r2 = EngineUtilities::MakeShared<A_Racer>("Luigi", 2);
   auto r3 = EngineUtilities::MakeShared<A_Racer>("Peach", 3);
   auto r4 = EngineUtilities::MakeShared<A_Racer>("Yoshi", 4);
 
-  // Carriles por offset (valores moderados; ajusta según ancho de pista)
-  auto base = m_path;
-  auto laneA = offsetClosed(base, +8.f);
-  auto laneB = offsetClosed(base, -8.f);
-  auto laneC = offsetClosed(base, +16.f);
-
-  r1->setPath(base);
-  r2->setPath(laneA);
-  r3->setPath(laneB);
-  r4->setPath(laneC);
-
-  // Grid de salida
-  r1->getComponent<Transform>()->setPosition(base.front() + sf::Vector2f{ 0.f,  0.f });
-  r2->getComponent<Transform>()->setPosition(laneA.front() + sf::Vector2f{ 0.f, 16.f });
-  r3->getComponent<Transform>()->setPosition(laneB.front() + sf::Vector2f{ 16.f,  0.f });
-  r4->getComponent<Transform>()->setPosition(laneC.front() + sf::Vector2f{ 16.f, 16.f });
-
-  // Texturas de personajes
+  // Texturas de corredores
   resourceMan.loadTexture("Sprites/Mario", "png");
   resourceMan.loadTexture("Sprites/Luigi", "png");
   resourceMan.loadTexture("Sprites/Peach", "png");
@@ -351,27 +344,24 @@ bool BaseApp::init()
 
   m_racers = { r1, r2, r3, r4 };
 
-  // 6) Línea de meta (posición + tamaño)
+  // Meta y vueltas
   m_finishLine = sf::FloatRect{ {1800.f,500.f}, {50.f,200.f} };
-
-  // Meta + laps
   for (auto& r : m_racers) {
     if (!r) continue;
     r->setFinishLine(m_finishLine);
     r->setTotalLaps(3);
   }
 
-  // Auto-escala de sprites a tamaño "kart"
+  // Escala uniforme de sprites (48 px aprox.)
   auto fitSprite = [&](const EngineUtilities::TSharedPointer<A_Racer>& racer,
     const EngineUtilities::TSharedPointer<Texture>& texComp,
     float targetPx)
     {
       if (texComp.isNull()) return;
-      auto texSize = texComp->getTexture().getSize(); // Vector2u
+      auto texSize = texComp->getTexture().getSize();
       float w = static_cast<float>(texSize.x);
       float h = static_cast<float>(texSize.y);
-      float s = targetPx / std::max(w, h);            // escala uniforme
-
+      float s = targetPx / std::max(w, h);
       if (auto xf = racer->getComponent<Transform>()) {
         xf->setScale({ s, s });
       }
@@ -381,8 +371,22 @@ bool BaseApp::init()
   fitSprite(r3, texPeach, 48.f);
   fitSprite(r4, texYoshi, 48.f);
 
-  // 7) GUI arranque
-  gui.setRacers(m_racers);
+  // Si existe un path guardado, cargarlo y aplicarlo
+  std::vector<sf::Vector2f> loaded;
+  if (loadPathTxt("Paths/track.path", loaded)) {
+    s_editPts = loaded;          // visible en magenta
+    applyCurrentPathToRacers(s_editPts); // asigna carriles y resetea
+  }
+  else {
+    m_path.clear(); // sin ruta inicial: usa el editor
+  }
 
+  // GUI arranque
+  gui.setRacers(m_racers);
   return true;
+}
+
+void BaseApp::destroy()
+{
+  // Nada especial aquí (si tuvieras recursos manuales, límpialos)
 }
