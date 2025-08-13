@@ -1,10 +1,9 @@
 #pragma once
 /**
- * @brief Cabecera principal de la aplicación del motor (loop, GUI y escena base).
+ * @brief Cabecera principal de la aplicación (loop, GUI y escena base).
  *
- * Administra la ventana, la GUI, los recursos, el circuito y los corredores.
- * Expone utilidades para inicializar/ejecutar/destruir y para aplicar una
- * ruta (path) editada a los corredores.
+ * - Administra ventana, GUI, recursos, pista y corredores.
+ * - Permite elegir un corredor para controlarlo manualmente con teclado.
  */
 
 #include "Prerequisites.h"
@@ -18,7 +17,7 @@
 #include <vector>
 
  /**
-  * @brief Aplicación base que contiene el ciclo principal y estado de la escena.
+  * @brief Aplicación base con ciclo principal y estado de escena/carrera.
   */
 class BaseApp {
 public:
@@ -26,45 +25,53 @@ public:
   ~BaseApp();
 
   /**
-   * @brief Ejecuta el bucle principal de la app.
-   * @return Código de salida (0 si todo fue bien).
+   * @brief Ejecuta el bucle principal.
+   * @return 0 si todo va bien.
    */
   int run();
 
   /**
-   * @brief Inicializa ventana, GUI, recursos y crea la escena inicial.
-   * @return true si la inicialización fue correcta.
+   * @brief Inicializa ventana, GUI, recursos y escena.
    */
   bool init();
 
   /**
-   * @brief Libera/termina los recursos de la aplicación.
+   * @brief Libera recursos.
    */
   void destroy();
 
 private:
   /**
-   * @brief Aplica un conjunto de puntos cerrados a los corredores.
-   *
-   * Densifica el path, genera carriles (offsets), posiciona a cada
-   * corredor en su carril y hace reset de su estado.
-   *
-   * @param pts Puntos del circuito (deben formar un lazo; si no, se cierra).
+   * @brief Aplica un path a los corredores (densifica + carriles + posiciona).
    */
   void applyCurrentPathToRacers(const std::vector<sf::Vector2f>& pts);
 
+  /**
+   * @brief Control del jugador (arcade) cuando hay corredor seleccionado.
+   */
+  void updatePlayerControl(float dt);
+
 private:
   // --- Infraestructura ---
-  EngineUtilities::TSharedPointer<Window> m_windowPtr; ///< @brief Ventana principal.
-  EngineGUI                                gui;        ///< @brief Paneles y controles de GUI.
-  ResourceManager                          resourceMan;///< @brief Gestor de texturas/recursos.
+  EngineUtilities::TSharedPointer<Window> m_windowPtr;
+  EngineGUI   gui;
+  ResourceManager resourceMan;
 
   // --- Escena ---
-  EngineUtilities::TSharedPointer<Actor>   m_trackActor; ///< @brief Actor del mapa/pista.
-  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;         ///< @brief Corredores activos.
-  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_finishedOrder;  ///< @brief Orden de llegada.
+  EngineUtilities::TSharedPointer<Actor>   m_trackActor;
+  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_racers;
+  std::vector<EngineUtilities::TSharedPointer<A_Racer>> m_finishedOrder;
 
   // --- Carrera ---
-  std::vector<sf::Vector2f> m_path;   ///< @brief Path base (carril 0, densificado).
-  sf::FloatRect             m_finishLine; ///< @brief Recta de meta para conteo de vueltas.
+  std::vector<sf::Vector2f> m_path;
+  sf::FloatRect             m_finishLine;
+
+  // --- Jugador ---
+  int           m_playerIdx = -1;     // -1 = nadie
+  sf::Vector2f  m_playerVel = { 0.f,0.f };
+  float         m_playerAng = 0.f;     // radianes
+  float         m_playerAccel = 480.f; // px/s^2
+  float         m_playerTurn = 2.6f;  // rad/s (a velocidad alta gira más)
+  float         m_playerMaxSp = 380.f; // px/s
+  float         m_playerDrag = 0.90f; // fricción por frame
 };

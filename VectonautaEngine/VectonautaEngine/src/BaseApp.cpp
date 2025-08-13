@@ -1,15 +1,43 @@
 ﻿// BaseApp.cpp
 #include "BaseApp.h"
+#include "Prerequisites.h"
+#include "Window.h"
+#include "EngineGUI.h"
+#include "A_Racer.h"
 #include "ECS/Transform.h"
 #include "CShape.h"
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp> // (no lo usamos ahora, pero muchas cabeceras tuyas lo incluyen)
+#include <SFML/Window.hpp>
 
 #include <cmath>
 #include <iostream>
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+
+// =========================================================
+// Helper de entrada: funciona en SFML 2.6+ (scancodes) y 2.5-
+// =========================================================
+#ifndef SFML_VERSION_MAJOR
+#define SFML_VERSION_MAJOR 2
+#define SFML_VERSION_MINOR 5
+#endif
+
+#if (SFML_VERSION_MAJOR > 2) || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR >= 6)
+// SFML 2.6+: tenemos Scancode
+static bool keyDownKC(sf::Keyboard::Key key, sf::Keyboard::Scancode sc) {
+  return sf::Keyboard::isKeyPressed(key) || sf::Keyboard::isKeyPressed(sc);
+}
+#define KEY(k, sc) keyDownKC((k), (sc))
+#else
+// SFML 2.5 o menor: solo Key
+static bool keyDownK(sf::Keyboard::Key key) {
+  return sf::Keyboard::isKeyPressed(key);
+}
+#define KEY(k, sc) keyDownK((k))
+#endif
 
 // ===== Helpers geométricos / path =====
 namespace {
@@ -87,59 +115,108 @@ namespace {
     return ec ? p : canon;
   }
 
-  // Guarda / carga de ruta (x y por línea)
-  static bool savePathTxt(const std::string& rel, const std::vector<sf::Vector2f>& pts) {
-    auto path = assetPath(rel);
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream f(path);
-    if (!f) return false;
-    for (auto& p : pts) f << p.x << " " << p.y << "\n";
-    return true;
-  }
-  static bool loadPathTxt(const std::string& rel, std::vector<sf::Vector2f>& out) {
-    auto path = assetPath(rel);
-    std::ifstream f(path);
-    if (!f) return false;
-    out.clear();
-    float x, y; while (f >> x >> y) out.push_back({ x,y });
-    return !out.empty();
-  }
-
 } // namespace
 
-// ===== Estado de editor (global para no tocar headers) =====
+// ===== Estado de editor =====
 static bool s_editMode = false;
 static std::vector<sf::Vector2f> s_editPts;
+
+// ===== Estado del jugador (persistente en este TU) =====
+static sf::Vector2f s_playerVel{ 0.f, 0.f };
+static float        s_playerAngleDeg = 0.f;
+static bool         s_playerInit = false;
+
+// Parámetros de control (expuestos en la ventanita Player Control)
+static float s_pcAccel = 400.f;  // px/s^2
+static float s_pcTurnRad = 2.60f;  // rad/s
+static float s_pcMaxSpeed = 300.f;  // px/s
+static float s_pcFriction = 0.90f;  // 0..1 por frame @60Hz aprox.
+
+// Guarda / carga de ruta (x y por línea)
+static bool savePathTxt(const std::string& rel, const std::vector<sf::Vector2f>& pts) {
+  auto path = assetPath(rel);
+  std::filesystem::create_directories(path.parent_path());
+  std::ofstream f(path);
+  if (!f) return false;
+  for (auto& p : pts) f << p.x << " " << p.y << "\n";
+  return true;
+}
+static bool loadPathTxt(const std::string& rel, std::vector<sf::Vector2f>& out) {
+  auto path = assetPath(rel);
+  std::ifstream f(path);
+  if (!f) return false;
+  out.clear();
+  float x, y; while (f >> x >> y) out.push_back({ x,y });
+  return !out.empty();
+}
 
 // ---------------- BaseApp ----------------
 
 BaseApp::~BaseApp() {}
 
-void BaseApp::applyCurrentPathToRacers(const std::vector<sf::Vector2f>& ptsIn)
+// --- Movimiento del jugador (aplica sobre el Transform del corredor seleccionado)
+void BaseApp::updatePlayerControl(float dt)
 {
-  if (ptsIn.size() < 3) return;
+  if (m_playerIdx < 0 || m_playerIdx >= (int)m_racers.size()) return;
+  auto& r = m_racers[m_playerIdx];
+  if (!r) return;
 
-  // Asegura lazo cerrado (copia local para no modificar editor)
-  std::vector<sf::Vector2f> pts = ptsIn;
-  if (vlen(pts.front() - pts.back()) > 5.f)
-    pts.push_back(pts.front());
+  auto xf = r->getComponent<Transform>();
+  if (!xf) return;
 
-  // Densificar + carriles
-  m_path = densifyClosed(pts, 30.f);
-  std::vector<std::vector<sf::Vector2f>> lanes{
-      m_path,
-      offsetClosed(m_path, +12.f),
-      offsetClosed(m_path, -12.f),
-      offsetClosed(m_path, +24.f),
-  };
-
-  for (size_t i = 0; i < m_racers.size(); ++i) {
-    auto lane = lanes[std::min(i, lanes.size() - 1)];
-    m_racers[i]->setPath(lane);
-    if (auto xf = m_racers[i]->getComponent<Transform>())
-      xf->setPosition(lane.front());
-    m_racers[i]->reset(); // importante: arrancan en el nuevo path
+  // Inicializa ángulo con el del Transform la primera vez
+  if (!s_playerInit) {
+    s_playerAngleDeg = xf->getRotation();
+    s_playerVel = { 0.f, 0.f };
+    s_playerInit = true;
   }
+
+  // -------- Entrada (WASD + Flechas) ----------
+  bool acc = KEY(sf::Keyboard::Key::W, sf::Keyboard::Scancode::W)
+    || KEY(sf::Keyboard::Key::Up, sf::Keyboard::Scancode::Up);
+
+  bool brk = KEY(sf::Keyboard::Key::S, sf::Keyboard::Scancode::S)
+    || KEY(sf::Keyboard::Key::Down, sf::Keyboard::Scancode::Down);
+
+  float steer = 0.f;
+  if (KEY(sf::Keyboard::Key::A, sf::Keyboard::Scancode::A) ||
+    KEY(sf::Keyboard::Key::Left, sf::Keyboard::Scancode::Left))  steer -= 1.f;
+  if (KEY(sf::Keyboard::Key::D, sf::Keyboard::Scancode::D) ||
+    KEY(sf::Keyboard::Key::Right, sf::Keyboard::Scancode::Right)) steer += 1.f;
+
+  // -------- Física muy simple ----------
+  constexpr float PI = 3.1415926535f;
+  constexpr float RAD2DEG = 180.f / PI;
+  constexpr float DEG2RAD = PI / 180.f;
+
+  // Giro (rad/s -> deg/s)
+  s_playerAngleDeg += steer * (s_pcTurnRad * RAD2DEG) * dt;
+
+  // Dirección forward desde el ángulo
+  const float ang = s_playerAngleDeg * DEG2RAD;
+  sf::Vector2f fwd{ std::cos(ang), std::sin(ang) };
+
+  // Acelera / frena
+  if (acc) {
+    s_playerVel += fwd * (s_pcAccel * dt);
+  }
+  if (brk) {
+    s_playerVel -= fwd * (0.8f * s_pcAccel * dt);
+  }
+
+  // Fricción (aprox. como potencia por 60 Hz)
+  float fr = std::pow(s_pcFriction, dt * 60.f);
+  s_playerVel *= fr;
+
+  // Clamp de velocidad
+  float spd = vlen(s_playerVel);
+  if (spd > s_pcMaxSpeed) {
+    s_playerVel = s_playerVel * (s_pcMaxSpeed / spd);
+  }
+
+  // Integración
+  xf->setPosition(xf->getPosition() + s_playerVel * dt);
+  xf->setRotation(s_playerAngleDeg);
 }
 
 int BaseApp::run()
@@ -169,7 +246,25 @@ int BaseApp::run()
         if (s_editMode && kp->scancode == sf::Keyboard::Scancode::C)
           s_editPts.clear();
         if (s_editMode && kp->scancode == sf::Keyboard::Scancode::F && s_editPts.size() >= 3) {
-          applyCurrentPathToRacers(s_editPts);
+          // Cierra lazo si hace falta
+          if (vlen(s_editPts.front() - s_editPts.back()) > 5.f)
+            s_editPts.push_back(s_editPts.front());
+
+          // Densificar y aplicar carriles
+          m_path = densifyClosed(s_editPts, 30.f);
+
+          std::vector<std::vector<sf::Vector2f>> lanes;
+          lanes.push_back(m_path);
+          lanes.push_back(offsetClosed(m_path, +12.f));
+          lanes.push_back(offsetClosed(m_path, -12.f));
+          lanes.push_back(offsetClosed(m_path, +24.f));
+
+          for (std::size_t i = 0; i < m_racers.size(); ++i) {
+            auto lane = lanes[std::min<std::size_t>(i, lanes.size() - 1)];
+            m_racers[i]->setPath(lane);
+            if (auto xf = m_racers[i]->getComponent<Transform>())
+              xf->setPosition(lane.front());
+          }
         }
       }
 
@@ -191,16 +286,31 @@ int BaseApp::run()
     if (!gui.isPaused())
       raceTimer += dt * gui.getSpeedMultiplier();
 
-    // Lógica de carrera
-    for (auto& r : m_racers) {
-      if (!r) continue;
-      if (!gui.isPaused())
-        r->update(dt * gui.getSpeedMultiplier());
+    // ================= LÓGICA DE CARRERA =================
 
-      if (r->getPlace() == 0 && r->isFinished()) {
-        int p = int(m_finishedOrder.size()) + 1;
-        r->setPlace(p);
-        m_finishedOrder.push_back(r);
+    // 1) Aplica input del jugador primero (mueve su Transform manualmente)
+    if (!gui.isPaused() && m_playerIdx >= 0 && m_playerIdx < (int)m_racers.size()) {
+      updatePlayerControl(dt * gui.getSpeedMultiplier());
+    }
+
+    // 2) Actualiza corredores (IA o sincronización de sprite)
+    for (std::size_t i = 0; i < m_racers.size(); ++i) {
+      auto& r = m_racers[i];
+      if (!r) continue;
+
+      if ((int)i == m_playerIdx) {
+        // Jugador: no avanza por IA, pero sí sincroniza su sprite con el Transform
+        r->update(0.f);
+      }
+      else {
+        if (!gui.isPaused())
+          r->update(dt * gui.getSpeedMultiplier());
+
+        if (r->getPlace() == 0 && r->isFinished()) {
+          int p = int(m_finishedOrder.size()) + 1;
+          r->setPlace(p);
+          m_finishedOrder.push_back(r);
+        }
       }
     }
 
@@ -209,9 +319,12 @@ int BaseApp::run()
       for (auto& r : m_racers) if (r) r->reset();
       m_finishedOrder.clear();
       raceTimer = 0.f;
+      // También resetea estado del jugador
+      s_playerVel = { 0.f,0.f };
+      s_playerInit = false;
     }
 
-    // GUI (panel racers)
+    // GUI: principal
     gui.setRacers(m_racers);
     gui.update(m_windowPtr, m_windowPtr->deltaTime, raceTimer);
     if (gui.shouldQuit()) m_windowPtr->close();
@@ -222,7 +335,24 @@ int BaseApp::run()
       ImGui::Text("Edit mode: %s  (press 'E' to toggle)", s_editMode ? "ON" : "OFF");
       ImGui::Text("Points: %d", (int)s_editPts.size());
       if (ImGui::Button("Finalize (F)")) {
-        applyCurrentPathToRacers(s_editPts);
+        if (s_editPts.size() >= 3) {
+          if (vlen(s_editPts.front() - s_editPts.back()) > 5.f)
+            s_editPts.push_back(s_editPts.front());
+
+          m_path = densifyClosed(s_editPts, 30.f);
+          std::vector<std::vector<sf::Vector2f>> lanes;
+          lanes.push_back(m_path);
+          lanes.push_back(offsetClosed(m_path, +12.f));
+          lanes.push_back(offsetClosed(m_path, -12.f));
+          lanes.push_back(offsetClosed(m_path, +24.f));
+
+          for (std::size_t i = 0; i < m_racers.size(); ++i) {
+            auto lane = lanes[std::min<std::size_t>(i, lanes.size() - 1)];
+            m_racers[i]->setPath(lane);
+            if (auto xf = m_racers[i]->getComponent<Transform>())
+              xf->setPosition(lane.front());
+          }
+        }
       }
       if (ImGui::Button("Save path")) {
         savePathTxt("Paths/track.path", s_editPts.empty() ? m_path : s_editPts);
@@ -231,12 +361,43 @@ int BaseApp::run()
       if (ImGui::Button("Load path")) {
         std::vector<sf::Vector2f> tmp;
         if (loadPathTxt("Paths/track.path", tmp)) {
-          s_editPts = tmp;            // deja ver los puntos en magenta
-          applyCurrentPathToRacers(s_editPts); // ¡aplicar de inmediato!
+          s_editPts = tmp; // deja ver los puntos en magenta
         }
       }
       ImGui::Separator();
       ImGui::Text("Click izq: add point | Z: undo | C: clear | F: finish");
+      ImGui::End();
+    }
+
+    // Ventana de Player Control (selección + parámetros)
+    {
+      ImGui::Begin("Player Control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+      ImGui::Text("Selecciona corredor (1..4, 0 = ninguno)");
+      int idx = (m_playerIdx < 0) ? 0 : (m_playerIdx + 1);
+      if (ImGui::RadioButton("Ninguno", idx == 0)) idx = 0;
+      ImGui::SameLine();
+      if (ImGui::RadioButton("Mario", idx == 1)) idx = 1;
+      ImGui::SameLine();
+      if (ImGui::RadioButton("Luigi", idx == 2)) idx = 2;
+      ImGui::SameLine();
+      if (ImGui::RadioButton("Peach", idx == 3)) idx = 3;
+      ImGui::SameLine();
+      if (ImGui::RadioButton("Yoshi", idx == 4)) idx = 4;
+
+      int newPlayerIdx = (idx == 0) ? -1 : (idx - 1);
+      if (newPlayerIdx != m_playerIdx) {
+        m_playerIdx = newPlayerIdx;
+        s_playerVel = { 0.f,0.f };
+        s_playerInit = false;
+      }
+
+      ImGui::Separator();
+      ImGui::Text("W/Up: acelerar | S/Down: frenar");
+      ImGui::Text("A/Left: girar izq | D/Right: girar der");
+      ImGui::SliderFloat("Aceleracion", &s_pcAccel, 50.f, 1200.f);
+      ImGui::SliderFloat("Giro", &s_pcTurnRad, 0.5f, 6.0f);
+      ImGui::SliderFloat("VelMax", &s_pcMaxSpeed, 50.f, 1200.f);
+      ImGui::SliderFloat("Friccion", &s_pcFriction, 0.80f, 0.999f);
       ImGui::End();
     }
 
@@ -320,13 +481,45 @@ bool BaseApp::init()
   m_trackActor->setTexture(trackTex);
   m_trackActor->getComponent<Transform>()->setPosition({ 0.f, 0.f });
 
+  // Intenta cargar una ruta por defecto si existe
+  {
+    std::vector<sf::Vector2f> loaded;
+    if (loadPathTxt("Paths/track.path", loaded)) {
+      s_editPts = loaded;
+      if (!s_editPts.empty() && vlen(s_editPts.front() - s_editPts.back()) > 5.f)
+        s_editPts.push_back(s_editPts.front());
+      m_path = densifyClosed(s_editPts, 30.f);
+    }
+    else {
+      m_path.clear(); // sin ruta inicial: usa el editor
+    }
+  }
+
   // Corredores (Mario, Luigi, Peach, Yoshi)
   auto r1 = EngineUtilities::MakeShared<A_Racer>("Mario", 1);
   auto r2 = EngineUtilities::MakeShared<A_Racer>("Luigi", 2);
   auto r3 = EngineUtilities::MakeShared<A_Racer>("Peach", 3);
   auto r4 = EngineUtilities::MakeShared<A_Racer>("Yoshi", 4);
 
-  // Texturas de corredores
+  // Si hay ruta, genera carriles y asigna
+  if (!m_path.empty()) {
+    auto base = m_path;
+    auto laneA = offsetClosed(base, +12.f);
+    auto laneB = offsetClosed(base, -12.f);
+    auto laneC = offsetClosed(base, +24.f);
+
+    r1->setPath(base);
+    r2->setPath(laneA);
+    r3->setPath(laneB);
+    r4->setPath(laneC);
+
+    if (auto xf = r1->getComponent<Transform>()) xf->setPosition(base.front());
+    if (auto xf = r2->getComponent<Transform>()) xf->setPosition(laneA.front());
+    if (auto xf = r3->getComponent<Transform>()) xf->setPosition(laneB.front());
+    if (auto xf = r4->getComponent<Transform>()) xf->setPosition(laneC.front());
+  }
+
+  // Texturas
   resourceMan.loadTexture("Sprites/Mario", "png");
   resourceMan.loadTexture("Sprites/Luigi", "png");
   resourceMan.loadTexture("Sprites/Peach", "png");
@@ -352,7 +545,7 @@ bool BaseApp::init()
     r->setTotalLaps(3);
   }
 
-  // Escala uniforme de sprites (48 px aprox.)
+  // Escala uniforme de sprites (48 px)
   auto fitSprite = [&](const EngineUtilities::TSharedPointer<A_Racer>& racer,
     const EngineUtilities::TSharedPointer<Texture>& texComp,
     float targetPx)
@@ -371,15 +564,10 @@ bool BaseApp::init()
   fitSprite(r3, texPeach, 48.f);
   fitSprite(r4, texYoshi, 48.f);
 
-  // Si existe un path guardado, cargarlo y aplicarlo
-  std::vector<sf::Vector2f> loaded;
-  if (loadPathTxt("Paths/track.path", loaded)) {
-    s_editPts = loaded;          // visible en magenta
-    applyCurrentPathToRacers(s_editPts); // asigna carriles y resetea
-  }
-  else {
-    m_path.clear(); // sin ruta inicial: usa el editor
-  }
+  // Estado inicial: sin jugador seleccionado
+  m_playerIdx = -1;
+  s_playerVel = { 0.f,0.f };
+  s_playerInit = false;
 
   // GUI arranque
   gui.setRacers(m_racers);
@@ -388,5 +576,8 @@ bool BaseApp::init()
 
 void BaseApp::destroy()
 {
-  // Nada especial aquí (si tuvieras recursos manuales, límpialos)
+  // Nada especial ahora (sin audio). Limpieza básica si quieres.
+  m_racers.clear();
+  m_finishedOrder.clear();
+  m_trackActor.reset();
 }
